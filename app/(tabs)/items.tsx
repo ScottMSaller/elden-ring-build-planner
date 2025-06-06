@@ -1,4 +1,5 @@
 import { EquipmentList } from '@/components/EquipmentList';
+import SafeAreaWrapper from '@/components/SafeAreaWrapper';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -91,6 +92,7 @@ export default function ItemsScreen() {
   };
 
   return (
+    <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
     <ThemedView style={styles.container}>
       <ScrollView 
         horizontal 
@@ -105,6 +107,7 @@ export default function ItemsScreen() {
       
       {renderContent()}
     </ThemedView>
+    </SafeAreaWrapper>
   );
 }
 
