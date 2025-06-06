@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 
 export default function CharacterScreen() {
-  const { stats, updateStat, resetStats } = useCharacter();
+  const { stats, updateStat, resetStats, getAvailablePoints } = useCharacter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
@@ -94,6 +94,16 @@ export default function CharacterScreen() {
             stat="level" 
             description="Overall character level"
           />
+          {getAvailablePoints() > 0 && (
+            <ThemedText style={styles.pointsInfo}>
+              You have {getAvailablePoints()} points available to spend
+            </ThemedText>
+          )}
+          {getAvailablePoints() < 0 && (
+            <ThemedText style={[styles.pointsInfo, styles.pointsError]}>
+              You have spent {Math.abs(getAvailablePoints())} more points than available
+            </ThemedText>
+          )}
           <StatRow 
             label="Vigor" 
             stat="vigor" 
@@ -246,5 +256,15 @@ const styles = StyleSheet.create({
   summaryText: {
     fontSize: 16,
     lineHeight: 22,
+  },
+  pointsInfo: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: -8,
+    marginBottom: 8,
+    opacity: 0.8,
+  },
+  pointsError: {
+    color: '#ff6b6b',
   },
 }); 
