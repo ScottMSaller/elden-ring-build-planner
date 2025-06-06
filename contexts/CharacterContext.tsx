@@ -18,6 +18,8 @@ interface CharacterContextType {
   updateStat: (stat: keyof CharacterStats, value: number) => void;
   resetStats: () => void;
   canEquipWeapon: (requirements: any) => boolean;
+  getAvailablePoints: () => number;
+  getUsedPoints: () => number;
 }
 
 const defaultStats: CharacterStats = {
@@ -31,6 +33,9 @@ const defaultStats: CharacterStats = {
   faith: 10,
   arcane: 10,
 };
+
+const BASE_POINTS = 80;
+const POINTS_PER_LEVEL = 1;
 
 const CharacterContext = createContext<CharacterContextType | undefined>(undefined);
 
@@ -124,11 +129,31 @@ export function CharacterProvider({ children }: CharacterProviderProps) {
     return true;
   };
 
+  const getUsedPoints = () => {
+    return (
+      (stats.vigor) +
+      (stats.mind) +
+      (stats.endurance) +
+      (stats.strength) +
+      (stats.dexterity) +
+      (stats.intelligence) +
+      (stats.faith) +
+      (stats.arcane)
+    );
+  };
+
+  const getAvailablePoints = () => {
+    const totalPoints = BASE_POINTS + (stats.level - 1) * POINTS_PER_LEVEL;
+    return totalPoints - getUsedPoints();
+  };
+
   const value: CharacterContextType = {
     stats,
     updateStat,
     resetStats,
     canEquipWeapon,
+    getAvailablePoints,
+    getUsedPoints,
   };
 
   return (
