@@ -6,14 +6,14 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { ApiResponse, EldenRingItem } from '@/services/eldenRingApi';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    FlatList,
-    Image,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 interface EquipmentListProps {
@@ -187,6 +187,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   title: {
+    paddingTop:4,
     fontSize: 28,
     fontWeight: 'bold',
   },

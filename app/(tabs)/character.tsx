@@ -1,3 +1,4 @@
+import SafeAreaWrapper from '@/components/SafeAreaWrapper';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
@@ -5,13 +6,13 @@ import { useCharacter } from '@/contexts/CharacterContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import React from 'react';
 import {
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 export default function CharacterScreen() {
@@ -35,10 +36,11 @@ export default function CharacterScreen() {
     );
   };
 
-  const StatRow = ({ label, stat, description }: { 
+  const StatRow = ({ label, stat, description, alert }: { 
     label: string; 
     stat: keyof typeof stats; 
     description: string;
+    alert?: string;
   }) => (
     <View style={styles.statRow}>
       <View style={styles.statInfo}>
@@ -73,6 +75,7 @@ export default function CharacterScreen() {
   );
 
   return (
+    <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
     <ThemedView style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
@@ -147,6 +150,7 @@ export default function CharacterScreen() {
         </View>
       </ScrollView>
     </ThemedView>
+    </SafeAreaWrapper>
   );
 }
 
@@ -165,6 +169,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   title: {
+    paddingTop:4,
     fontSize: 28,
     fontWeight: 'bold',
   },

@@ -1,4 +1,5 @@
 import { EquipmentList } from '@/components/EquipmentList';
+import SafeAreaWrapper from '@/components/SafeAreaWrapper';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -29,12 +30,12 @@ export default function SpellsScreen() {
   );
 
   return (
+    <SafeAreaWrapper style={{ backgroundColor: colors.background}}>
     <ThemedView style={styles.container}>
       <View style={styles.tabContainer}>
         <TabButton tab="sorceries" title="Sorceries" />
         <TabButton tab="incantations" title="Incantations" />
       </View>
-      
       {activeTab === 'sorceries' ? (
         <EquipmentList
           title="Sorceries"
@@ -51,6 +52,7 @@ export default function SpellsScreen() {
         />
       )}
     </ThemedView>
+    </SafeAreaWrapper>
   );
 }
 
