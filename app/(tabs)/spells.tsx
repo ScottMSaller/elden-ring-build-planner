@@ -1,5 +1,5 @@
-import { EquipmentList } from '@/components/EquipmentList';
 import SafeAreaWrapper from '@/components/SafeAreaWrapper';
+import { SpellList } from '@/components/SpellList';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -37,18 +37,16 @@ export default function SpellsScreen() {
         <TabButton tab="incantations" title="Incantations" />
       </View>
       {activeTab === 'sorceries' ? (
-        <EquipmentList
+        <SpellList
           title="Sorceries"
           fetchData={eldenRingApi.getAllSorceries.bind(eldenRingApi)}
           searchData={eldenRingApi.searchSorceries.bind(eldenRingApi)}
-          showRequirements={true}
         />
       ) : (
-        <EquipmentList
+        <SpellList
           title="Incantations"
           fetchData={eldenRingApi.getAllIncantations.bind(eldenRingApi)}
           searchData={eldenRingApi.searchIncantations.bind(eldenRingApi)}
-          showRequirements={true}
         />
       )}
     </ThemedView>

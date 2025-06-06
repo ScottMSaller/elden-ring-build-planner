@@ -6,29 +6,40 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { ApiResponse, EldenRingItem } from '@/services/eldenRingApi';
 import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    Image,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
-interface EquipmentListProps {
-  title: string;
-  fetchData: (limit?: number) => Promise<ApiResponse<EldenRingItem>>;
-  searchData: (name: string) => Promise<ApiResponse<EldenRingItem>>;
-  showRequirements?: boolean;
+interface SpellRequirement {
+  name: string;
+  amount: number;
 }
 
-export function EquipmentList({ title, fetchData, searchData, showRequirements = false }: EquipmentListProps) {
-  const [items, setItems] = useState<EldenRingItem[]>([]);
+interface SpellItem extends Omit<EldenRingItem, 'requires'> {
+  requires?: SpellRequirement[];
+  cost?: number;
+  slots?: number;
+  effects?: string;
+}
+
+interface SpellListProps {
+  title: string;
+  fetchData: (limit?: number) => Promise<ApiResponse<any>>;
+  searchData: (name: string) => Promise<ApiResponse<any>>;
+}
+
+export function SpellList({ title, fetchData, searchData }: SpellListProps) {
+  const [items, setItems] = useState<SpellItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
-  const { canEquipWeapon } = useCharacter();
+  const { stats } = useCharacter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
@@ -39,7 +50,7 @@ export function EquipmentList({ title, fetchData, searchData, showRequirements =
   const loadItems = async () => {
     try {
       setLoading(true);
-      const response = await fetchData(50); // Limit to 50 items for performance
+      const response = await fetchData(50);
       setItems(response.data);
     } catch (error) {
       console.error('Error loading items:', error);
@@ -66,15 +77,15 @@ export function EquipmentList({ title, fetchData, searchData, showRequirements =
     }
   };
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    setSearchQuery('');
-    await loadItems();
-    setRefreshing(false);
+  const canEquipSpell = (requirements: SpellRequirement[]): boolean => {
+    return requirements.every(req => {
+      const statValue = stats[req.name.toLowerCase() as keyof typeof stats] || 0;
+      return statValue >= req.amount;
+    });
   };
 
-  const renderItem = ({ item }: { item: EldenRingItem }) => {
-    const canEquip = showRequirements ? canEquipWeapon((item as any).requiredAttributes) : true;
+  const renderItem = ({ item }: { item: SpellItem }) => {
+    const canEquip = canEquipSpell(item.requires || []);
     
     return (
       <TouchableOpacity style={[
@@ -97,8 +108,8 @@ export function EquipmentList({ title, fetchData, searchData, showRequirements =
             {item.type && (
               <ThemedText style={styles.itemType}>{item.type}</ThemedText>
             )}
-            {item.effect && (
-              <ThemedText style={styles.itemEffect}>{item.effect}</ThemedText>
+            {item.effects && (
+              <ThemedText style={styles.itemEffect}>{item.effects}</ThemedText>
             )}
           </View>
           {!canEquip && (
@@ -114,12 +125,13 @@ export function EquipmentList({ title, fetchData, searchData, showRequirements =
           </ThemedText>
         )}
 
-        {showRequirements && (item as any).requiredAttributes && (
+        {item.requires && (
           <View style={styles.requirements}>
             <ThemedText style={styles.requirementsTitle}>Requirements:</ThemedText>
             <ThemedText style={styles.requirementsText}>
-              {((item as any).requiredAttributes)
-                .map((req: { name: string; amount: string }) => `${req.name}: ${req.amount}`)
+              {item.requires
+                .filter(req => req.amount > 0)
+                .map(req => `${req.name}: ${req.amount}`)
                 .join(', ')}
             </ThemedText>
           </View>
@@ -167,11 +179,11 @@ export function EquipmentList({ title, fetchData, searchData, showRequirements =
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         refreshing={refreshing}
-        onRefresh={handleRefresh}
+        onRefresh={loadItems}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <ThemedText style={styles.emptyText}>
-              {searchQuery ? 'No items found matching your search.' : 'No items available.'}
+              {searchQuery ? 'No spells found matching your search.' : 'No spells available.'}
             </ThemedText>
           </View>
         }
