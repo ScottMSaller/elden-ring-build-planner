@@ -38,7 +38,7 @@ export default function SpellsScreen() {
       <EquipmentList
         title={activeTab === 'sorceries' ? 'Sorceries' : 'Incantations'}
         type={activeTab}
-        showRequirements={false}
+        showRequirements={true}
         key={activeTab}
       />
     </ThemedView>

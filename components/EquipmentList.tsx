@@ -24,6 +24,17 @@ import {
   View
 } from 'react-native';
 
+interface SpellRequirement {
+  name: string;
+  amount: number;
+}
+
+interface SpellItem extends EldenRingItem {
+  cost?: number;
+  slots?: number;
+  requires?: SpellRequirement[];
+}
+
 interface EquipmentListProps {
   title: string;
   type: 'weapons' | 'shields' | 'sorceries' | 'spirits' | 'talismans' | 'incantations' | 'items' | 'ashes' | 'armors';
@@ -33,10 +44,10 @@ interface EquipmentListProps {
 const DATA_MAP = {
   weapons: weaponsData,
   shields: shieldsData,
-  sorceries: sorceriesData,
+  sorceries: sorceriesData as SpellItem[],
   spirits: spiritsData,
   talismans: talismansData,
-  incantations: incantationsData,
+  incantations: incantationsData as SpellItem[],
   items: itemsData,
   ashes: ashesData,
   armors: armorData,
@@ -74,11 +85,17 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
     }
 
     if (equippableOnly) {
-      filtered = filtered.filter(item => canEquipWeapon((item as any).requiredAttributes));
+      filtered = filtered.filter(item => {
+        if (type === 'sorceries' || type === 'incantations') {
+          const spellItem = item as SpellItem;
+          return canEquipWeapon(spellItem.requires);
+        }
+        return canEquipWeapon((item as any).requiredAttributes);
+      });
     }
 
     return filtered;
-  }, [items, canEquipWeapon]);
+  }, [items, canEquipWeapon, type]);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -88,9 +105,11 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
     setShowEquippableOnly(!showEquippableOnly);
   };
 
-  const renderItem = ({ item }: { item: EldenRingItem }) => {
-    const canEquip = showRequirements ? canEquipWeapon((item as any).requiredAttributes) : true;
+  const renderItem = ({ item }: { item: EldenRingItem | SpellItem }) => {
+    const canEquip = showRequirements ? canEquipWeapon((item as any).requiredAttributes || (item as SpellItem).requires) : true;
     const isExpanded = expandedItems.has(item.id);
+    const isSpell = type === 'sorceries' || type === 'incantations';
+    const spellItem = isSpell ? item as SpellItem : null;
     
     return (
       <TouchableOpacity 
@@ -292,6 +311,41 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
                       <ThemedText style={styles.statType}>{stat.name}</ThemedText>
                       <ThemedText style={styles.statValue}>
                         {stat.amount !== null ? stat.amount.toFixed(1) : 'N/A'}
+                      </ThemedText>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+          </View>
+        )}
+
+        {isExpanded && isSpell && spellItem && (
+          <View style={styles.statsContainer}>
+            <View style={styles.weightContainer}>
+              <ThemedText style={styles.statsLabel}>FP Cost</ThemedText>
+              <ThemedText style={styles.statsValue}>{spellItem.cost || 'N/A'}</ThemedText>
+            </View>
+
+            {spellItem.slots && (
+              <View style={styles.weightContainer}>
+                <ThemedText style={styles.statsLabel}>Memory Slots</ThemedText>
+                <ThemedText style={styles.statsValue}>{spellItem.slots}</ThemedText>
+              </View>
+            )}
+
+            {showRequirements && spellItem.requires && spellItem.requires.length > 0 && (
+              <View style={styles.statSection}>
+                <ThemedText style={styles.statsLabel}>Requirements</ThemedText>
+                <View style={styles.statsGrid}>
+                  {spellItem.requires.map((req) => (
+                    <View key={req.name} style={styles.statItem}>
+                      <ThemedText style={styles.statType}>{req.name}</ThemedText>
+                      <ThemedText style={[
+                        styles.statValue,
+                        !canEquipWeapon([req]) && styles.statValueUnmet
+                      ]}>
+                        {req.amount !== null ? req.amount : 'N/A'}
                       </ThemedText>
                     </View>
                   ))}
