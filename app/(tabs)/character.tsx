@@ -4,7 +4,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import { useCharacter } from '@/contexts/CharacterContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
   ScrollView,
@@ -41,38 +41,52 @@ export default function CharacterScreen() {
     stat: keyof typeof stats; 
     description: string;
     alert?: string;
-  }) => (
-    <View style={styles.statRow}>
-      <View style={styles.statInfo}>
-        <ThemedText style={styles.statLabel}>{label}</ThemedText>
-        <ThemedText style={styles.statDescription}>{description}</ThemedText>
+  }) => {
+    const [localValue, setLocalValue] = useState(stats[stat].toString());
+
+    const handleBlur = () => {
+      const numValue = parseInt(localValue) || 1;
+      handleStatChange(stat, numValue.toString());
+    };
+
+    useEffect(() => {
+      setLocalValue(stats[stat].toString());
+    }, [stats[stat]]);
+
+    return (
+      <View style={styles.statRow}>
+        <View style={styles.statInfo}>
+          <ThemedText style={styles.statLabel}>{label}</ThemedText>
+          <ThemedText style={styles.statDescription}>{description}</ThemedText>
+        </View>
+        <View style={styles.statControls}>
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: colors.tint }]}
+            onPress={() => updateStat(stat, stats[stat] - 1)}
+          >
+            <Text style={styles.buttonText}>-</Text>
+          </TouchableOpacity>
+          <TextInput
+            style={[styles.statInput, { 
+              borderColor: '#ccc',
+              color: colors.text,
+            }]}
+            value={localValue}
+            onChangeText={setLocalValue}
+            onBlur={handleBlur}
+            keyboardType="numeric"
+            maxLength={3}
+          />
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: colors.tint }]}
+            onPress={() => updateStat(stat, stats[stat] + 1)}
+          >
+            <Text style={styles.buttonText}>+</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-      <View style={styles.statControls}>
-        <TouchableOpacity
-          style={[styles.button, { backgroundColor: colors.tint }]}
-          onPress={() => updateStat(stat, stats[stat] - 1)}
-        >
-          <Text style={styles.buttonText}>-</Text>
-        </TouchableOpacity>
-        <TextInput
-          style={[styles.statInput, { 
-            borderColor: '#ccc',
-            color: colors.text,
-          }]}
-          value={stats[stat].toString()}
-          onChangeText={(value) => handleStatChange(stat, value)}
-          keyboardType="numeric"
-          maxLength={3}
-        />
-        <TouchableOpacity
-          style={[styles.button, { backgroundColor: colors.tint }]}
-          onPress={() => updateStat(stat, stats[stat] + 1)}
-        >
-          <Text style={styles.buttonText}>+</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
