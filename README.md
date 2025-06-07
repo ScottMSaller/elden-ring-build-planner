@@ -1,50 +1,48 @@
-# Welcome to your Expo app 👋
+# Elden Ring Build Planner
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A mobile app built with React Native and Expo to help players plan and optimize their builds in *Elden Ring*. Users can explore weapons, spells, armor, and stats to create the perfect character setup.
 
-## Get started
+## 🚀 Getting Started
 
-1. Install dependencies
+### Prerequisites
+
+- Node.js
+- npm or yarn
+- Expo CLI (`npm install -g expo-cli`)
+
+### Installation
+
+1. Clone the repository:
 
    ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+   git clone https://github.com/ScottMSaller/elden-ring-build-planner.git
+   cd elden-ring-build-planner
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+2. Install dependencies
+```bash
+npm install
+# or
+yarn install
+```
 
-## Learn more
+3. Start the development server
+```bash
+npx expo start
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+This will open the Expo Dev Tools in your browser. You can then run the app on an emulator or physical device.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## 🧱 Project Structure
+	•	app/: Main application components and screens.
+	•	assets/: Static assets like images and fonts.
+	•	components/: Reusable UI components.
+	•	constants/: Constant values used across the app.
+	•	contexts/: React Contexts for state management.
+	•	hooks/: Custom React hooks.
+	•	scripts/: Utility scripts for data processing.
+	•	services/: API calls and data fetching logic.
 
-## Join the community
+## 📄 License
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+This project is licensed under the MIT License.
