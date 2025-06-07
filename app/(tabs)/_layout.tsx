@@ -27,6 +27,12 @@ export default function TabLayout() {
         }),
       }}>
       <Tabs.Screen
+        name="index"
+        options={{
+          href: null, // This hides the tab from the tab bar
+        }}
+      />
+      <Tabs.Screen
         name="character"
         options={{
           title: 'Character',
