@@ -136,22 +136,80 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
           </ThemedText>
         )}
 
-        {isExpanded && type === 'armors' && (
+        {isExpanded && type === 'weapons' && (
           <View style={styles.statsContainer}>
             <View style={styles.weightContainer}>
               <ThemedText style={styles.statsLabel}>Weight</ThemedText>
               <ThemedText style={styles.statsValue}>{item.weight?.toFixed(1) || 'N/A'}</ThemedText>
             </View>
-            
-            {item.dmgNegation && item.dmgNegation.length > 0 && (
-              <View style={styles.dmgNegationContainer}>
-                <ThemedText style={styles.statsLabel}>Damage Negation</ThemedText>
+
+            {item.category && (
+              <View style={styles.statSection}>
+                <ThemedText style={styles.statsLabel}>Category</ThemedText>
+                <ThemedText style={styles.statsValue}>{item.category}</ThemedText>
+              </View>
+            )}
+
+            {item.attack && item.attack.length > 0 && (
+              <View style={styles.statSection}>
+                <ThemedText style={styles.statsLabel}>Attack</ThemedText>
                 <View style={styles.statsGrid}>
-                  {item.dmgNegation.map((stat) => (
+                  {item.attack.map((stat) => (
                     <View key={stat.name} style={styles.statItem}>
                       <ThemedText style={styles.statType}>{stat.name}</ThemedText>
                       <ThemedText style={styles.statValue}>
-                        {stat.amount !== null ? stat.amount.toFixed(1) : 'N/A'}
+                        {stat.amount !== null ? stat.amount : 'N/A'}
+                      </ThemedText>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {item.defence && item.defence.length > 0 && (
+              <View style={styles.statSection}>
+                <ThemedText style={styles.statsLabel}>Defence</ThemedText>
+                <View style={styles.statsGrid}>
+                  {item.defence.map((stat) => (
+                    <View key={stat.name} style={styles.statItem}>
+                      <ThemedText style={styles.statType}>{stat.name}</ThemedText>
+                      <ThemedText style={styles.statValue}>
+                        {stat.amount !== null ? stat.amount : 'N/A'}
+                      </ThemedText>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {item.scalesWith && item.scalesWith.length > 0 && (
+              <View style={styles.statSection}>
+                <ThemedText style={styles.statsLabel}>Scaling</ThemedText>
+                <View style={styles.statsGrid}>
+                  {item.scalesWith.map((stat) => (
+                    <View key={stat.name} style={styles.statItem}>
+                      <ThemedText style={styles.statType}>{stat.name}</ThemedText>
+                      <ThemedText style={styles.statValue}>
+                        {stat.scaling || 'N/A'}
+                      </ThemedText>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {showRequirements && (item as any).requiredAttributes && (
+              <View style={styles.statSection}>
+                <ThemedText style={styles.statsLabel}>Requirements</ThemedText>
+                <View style={styles.statsGrid}>
+                  {(item as any).requiredAttributes.map((req: { name: string; amount: number | null }) => (
+                    <View key={req.name} style={styles.statItem}>
+                      <ThemedText style={styles.statType}>{req.name}</ThemedText>
+                      <ThemedText style={[
+                        styles.statValue,
+                        !canEquipWeapon([req]) && styles.statValueUnmet
+                      ]}>
+                        {req.amount !== null ? req.amount : 'N/A'}
                       </ThemedText>
                     </View>
                   ))}
@@ -218,14 +276,28 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
           </View>
         )}
 
-        {showRequirements && (item as any).requiredAttributes && (
-          <View style={styles.requirements}>
-            <ThemedText style={styles.requirementsTitle}>Requirements:</ThemedText>
-            <ThemedText style={styles.requirementsText}>
-              {((item as any).requiredAttributes)
-                .map((req: { name: string; amount: string }) => `${req.name}: ${req.amount}`)
-                .join(', ')}
-            </ThemedText>
+        {isExpanded && type === 'armors' && (
+          <View style={styles.statsContainer}>
+            <View style={styles.weightContainer}>
+              <ThemedText style={styles.statsLabel}>Weight</ThemedText>
+              <ThemedText style={styles.statsValue}>{item.weight?.toFixed(1) || 'N/A'}</ThemedText>
+            </View>
+            
+            {item.dmgNegation && item.dmgNegation.length > 0 && (
+              <View style={styles.dmgNegationContainer}>
+                <ThemedText style={styles.statsLabel}>Damage Negation</ThemedText>
+                <View style={styles.statsGrid}>
+                  {item.dmgNegation.map((stat) => (
+                    <View key={stat.name} style={styles.statItem}>
+                      <ThemedText style={styles.statType}>{stat.name}</ThemedText>
+                      <ThemedText style={styles.statValue}>
+                        {stat.amount !== null ? stat.amount.toFixed(1) : 'N/A'}
+                      </ThemedText>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
           </View>
         )}
       </TouchableOpacity>
@@ -473,5 +545,8 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  statValueUnmet: {
+    color: '#ff4444',
   },
 }); 
