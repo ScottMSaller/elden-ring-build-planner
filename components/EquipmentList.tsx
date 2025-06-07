@@ -2,6 +2,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import { useCharacter } from '@/contexts/CharacterContext';
+import armorData from '@/data/armors.json';
 import ashesData from '@/data/ashes.json';
 import incantationsData from '@/data/incantations.json';
 import itemsData from '@/data/items.json';
@@ -25,7 +26,7 @@ import {
 
 interface EquipmentListProps {
   title: string;
-  type: 'weapons' | 'shields' | 'sorceries' | 'spirits' | 'talismans' | 'incantations' | 'items' | 'ashes';
+  type: 'weapons' | 'shields' | 'sorceries' | 'spirits' | 'talismans' | 'incantations' | 'items' | 'ashes' | 'armors';
   showRequirements?: boolean;
 }
 
@@ -38,6 +39,7 @@ const DATA_MAP = {
   incantations: incantationsData,
   items: itemsData,
   ashes: ashesData,
+  armors: armorData,
 } as const;
 
 export function EquipmentList({ title, type, showRequirements = false }: EquipmentListProps) {
@@ -83,7 +85,7 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
       ]}>
         <View style={styles.itemHeader}>
           <Image 
-            source={{ uri: item.image }} 
+            source={item.image ? { uri: item.image } : require('@/assets/images/partial-react-logo.png')}
             style={styles.itemImage}
             defaultSource={require('@/assets/images/partial-react-logo.png')}
           />
@@ -130,18 +132,6 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
 
   const filteredItems = filterItems(searchQuery, showEquippableOnly);
 
-  if (filteredItems.length === 0) {
-    return (
-      <ThemedView style={styles.container}>
-        <View style={styles.emptyContainer}>
-          <ThemedText style={styles.emptyText}>
-            {searchQuery ? 'No items found matching your search.' : 'No items available.'}
-          </ThemedText>
-        </View>
-      </ThemedView>
-    );
-  }
-
   return (
     <ThemedView style={styles.container}>
       <View style={styles.header}>
@@ -160,6 +150,22 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
           value={searchQuery}
           onChangeText={handleSearch}
         />
+        {showRequirements && (
+          <TouchableOpacity
+            style={[
+              styles.filterButton,
+              showEquippableOnly && { backgroundColor: colors.tint }
+            ]}
+            onPress={toggleEquippable}
+          >
+            <Text style={[
+              styles.filterButtonText,
+              showEquippableOnly && styles.filterButtonTextActive
+            ]}>
+              {showEquippableOnly ? 'Show All' : 'Show Equippable'}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <FlatList
@@ -169,6 +175,13 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
         style={styles.list}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <ThemedText style={styles.emptyText}>
+              {searchQuery ? 'No items found matching your search.' : 'No items available.'}
+            </ThemedText>
+          </View>
+        }
       />
     </ThemedView>
   );
@@ -286,5 +299,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     opacity: 0.6,
     textAlign: 'center',
+  },
+  filterButton: {
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+  },
+  filterButtonText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  filterButtonTextActive: {
+    backgroundColor: '#ccc',
   },
 }); 

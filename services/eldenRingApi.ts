@@ -5,17 +5,23 @@ export interface EldenRingItem {
   id: string;
   name: string;
   image: string | null;
-  description: string;
+  description: string | null;
+  category?: string;
   type?: string;
   effect?: string;
-  affinity?: string;
-  skill?: string;
-  attack?: any;
-  defence?: any;
-  scalesWith?: any;
-  requiredAttributes?: any;
-  category?: string;
   weight?: number;
+  requiredAttributes?: Array<{
+    name: string;
+    amount: number;
+  }>;
+  dmgNegation?: {
+    name: string;
+    amount: number;
+  }[];
+  resistance?: {
+    name: string;
+    amount: number;
+  }[];
 }
 
 export interface Weapon extends EldenRingItem {

@@ -1,36 +1,36 @@
 const fs = require('fs');
 const path = require('path');
-const nodeFetch = require('node-fetch');
+const fetch = require('node-fetch');
 
-const BASE_URL = 'https://raw.githubusercontent.com/deliton/eldenring-api/main/api/public/data';
-const DATA_TYPES = [
-  'weapons', 'shields', 'sorceries', 'spirits', 
-  'talismans', 'incantations', 'items', 'ashes'
-];
+const BASE_URL = 'https://raw.githubusercontent.com/deliton/eldenring-api/main/api/public/data/';
 
-async function fetchAndSaveData() {
-  try {
-    const dataDir = path.join(process.cwd(), 'data');
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir);
-    }
+async function fetchData(endpoint: string) {
+  const response = await fetch(`${BASE_URL}${endpoint}.json`);
+  return response.json();
+}
 
-    for (const type of DATA_TYPES) {
-      console.log(`Fetching ${type}...`);
-      const response = await nodeFetch(`${BASE_URL}/${type}.json`);
-      const data = await response.json();
-      
-      fs.writeFileSync(
-        path.join(dataDir, `${type}.json`),
-        JSON.stringify(data, null, 2)
-      );
-      console.log(`Saved ${type}.json`);
-    }
+async function main() {
+  const endpoints = [
+    'weapons',
+    'shields',
+    'sorceries',
+    'spirits',
+    'talismans',
+    'incantations',
+    'items',
+    'ashes',
+    'armors'
+  ];
 
-    console.log('All data fetched and saved successfully!');
-  } catch (error) {
-    console.error('Error fetching data:', error);
+  for (const endpoint of endpoints) {
+    console.log(`Fetching ${endpoint}...`);
+    const data = await fetchData(endpoint);
+    fs.writeFileSync(
+      path.join(__dirname, '..', 'data', `${endpoint}.json`),
+      JSON.stringify(data, null, 2)
+    );
+    console.log(`Saved ${endpoint}.json`);
   }
 }
 
-fetchAndSaveData(); 
+main().catch(console.error); 
