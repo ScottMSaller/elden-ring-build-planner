@@ -161,6 +161,63 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
           </View>
         )}
 
+        {isExpanded && type === 'shields' && (
+          <View style={styles.statsContainer}>
+            <View style={styles.weightContainer}>
+              <ThemedText style={styles.statsLabel}>Weight</ThemedText>
+              <ThemedText style={styles.statsValue}>{item.weight?.toFixed(1) || 'N/A'}</ThemedText>
+            </View>
+
+            {item.attack && item.attack.length > 0 && (
+              <View style={styles.statSection}>
+                <ThemedText style={styles.statsLabel}>Attack</ThemedText>
+                <View style={styles.statsGrid}>
+                  {item.attack.map((stat) => (
+                    <View key={stat.name} style={styles.statItem}>
+                      <ThemedText style={styles.statType}>{stat.name}</ThemedText>
+                      <ThemedText style={styles.statValue}>
+                        {stat.amount !== null ? stat.amount : 'N/A'}
+                      </ThemedText>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {item.defence && item.defence.length > 0 && (
+              <View style={styles.statSection}>
+                <ThemedText style={styles.statsLabel}>Defence</ThemedText>
+                <View style={styles.statsGrid}>
+                  {item.defence.map((stat) => (
+                    <View key={stat.name} style={styles.statItem}>
+                      <ThemedText style={styles.statType}>{stat.name}</ThemedText>
+                      <ThemedText style={styles.statValue}>
+                        {stat.amount !== null ? stat.amount : 'N/A'}
+                      </ThemedText>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {item.scalesWith && item.scalesWith.length > 0 && (
+              <View style={styles.statSection}>
+                <ThemedText style={styles.statsLabel}>Scaling</ThemedText>
+                <View style={styles.statsGrid}>
+                  {item.scalesWith.map((stat) => (
+                    <View key={stat.name} style={styles.statItem}>
+                      <ThemedText style={styles.statType}>{stat.name}</ThemedText>
+                      <ThemedText style={styles.statValue}>
+                        {stat.scaling || 'N/A'}
+                      </ThemedText>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+          </View>
+        )}
+
         {showRequirements && (item as any).requiredAttributes && (
           <View style={styles.requirements}>
             <ThemedText style={styles.requirementsTitle}>Requirements:</ThemedText>
@@ -410,5 +467,11 @@ const styles = StyleSheet.create({
   },
   expandIconRotated: {
     transform: [{ rotate: '180deg' }],
+  },
+  statSection: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
   },
 }); 
