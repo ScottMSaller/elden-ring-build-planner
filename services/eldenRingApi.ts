@@ -6,22 +6,34 @@ export interface EldenRingItem {
   name: string;
   image: string | null;
   description: string | null;
-  category?: string;
+  category?: string | null;
   type?: string;
   effect?: string;
   weight?: number;
   requiredAttributes?: Array<{
     name: string;
-    amount: number;
+    amount: number | null;
   }>;
-  dmgNegation?: {
+  dmgNegation?: Array<{
     name: string;
-    amount: number;
-  }[];
-  resistance?: {
+    amount: number | null;
+  }>;
+  resistance?: Array<{
     name: string;
-    amount: number;
-  }[];
+    amount: number | null;
+  }>;
+  attack?: Array<{
+    name: string;
+    amount: number | null;
+  }>;
+  defence?: Array<{
+    name: string;
+    amount: number | null;
+  }>;
+  scalesWith?: Array<{
+    name: string;
+    scaling?: string;
+  }>;
 }
 
 export interface Weapon extends EldenRingItem {

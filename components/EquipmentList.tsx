@@ -46,9 +46,22 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
   const [items] = useState<EldenRingItem[]>(() => DATA_MAP[type]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showEquippableOnly, setShowEquippableOnly] = useState(false);
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const { canEquipWeapon } = useCharacter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
+
+  const toggleExpanded = (itemId: string) => {
+    setExpandedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
+      } else {
+        newSet.add(itemId);
+      }
+      return newSet;
+    });
+  };
 
   const filterItems = useCallback((query: string, equippableOnly: boolean) => {
     let filtered = items;
@@ -77,12 +90,16 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
 
   const renderItem = ({ item }: { item: EldenRingItem }) => {
     const canEquip = showRequirements ? canEquipWeapon((item as any).requiredAttributes) : true;
+    const isExpanded = expandedItems.has(item.id);
     
     return (
-      <TouchableOpacity style={[
-        styles.itemCard,
-        !canEquip && styles.itemCardDisabled
-      ]}>
+      <TouchableOpacity 
+        style={[
+          styles.itemCard,
+          !canEquip && styles.itemCardDisabled
+        ]}
+        onPress={() => toggleExpanded(item.id)}
+      >
         <View style={styles.itemHeader}>
           <Image 
             source={item.image ? { uri: item.image } : require('@/assets/images/partial-react-logo.png')}
@@ -108,12 +125,40 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
               <Text style={styles.requirementText}>Cannot Equip</Text>
             </View>
           )}
+          <ThemedText style={[styles.expandIcon, isExpanded && styles.expandIconRotated]}>
+            ▼
+          </ThemedText>
         </View>
         
         {item.description && (
           <ThemedText style={styles.itemDescription} numberOfLines={3}>
             {item.description}
           </ThemedText>
+        )}
+
+        {isExpanded && type === 'armors' && (
+          <View style={styles.statsContainer}>
+            <View style={styles.weightContainer}>
+              <ThemedText style={styles.statsLabel}>Weight</ThemedText>
+              <ThemedText style={styles.statsValue}>{item.weight?.toFixed(1) || 'N/A'}</ThemedText>
+            </View>
+            
+            {item.dmgNegation && item.dmgNegation.length > 0 && (
+              <View style={styles.dmgNegationContainer}>
+                <ThemedText style={styles.statsLabel}>Damage Negation</ThemedText>
+                <View style={styles.statsGrid}>
+                  {item.dmgNegation.map((stat) => (
+                    <View key={stat.name} style={styles.statItem}>
+                      <ThemedText style={styles.statType}>{stat.name}</ThemedText>
+                      <ThemedText style={styles.statValue}>
+                        {stat.amount !== null ? stat.amount.toFixed(1) : 'N/A'}
+                      </ThemedText>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+          </View>
         )}
 
         {showRequirements && (item as any).requiredAttributes && (
@@ -312,5 +357,58 @@ const styles = StyleSheet.create({
   },
   filterButtonTextActive: {
     backgroundColor: '#ccc',
+  },
+  statsContainer: {
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: 8,
+  },
+  weightContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  dmgNegationContainer: {
+    marginTop: 4,
+  },
+  statsLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  statsValue: {
+    fontSize: 14,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -8,
+  },
+  statItem: {
+    width: '25%',
+    padding: 8,
+  },
+  statType: {
+    fontSize: 12,
+    opacity: 0.8,
+    marginBottom: 2,
+    textTransform: 'capitalize',
+  },
+  statValue: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  expandIcon: {
+    fontSize: 16,
+    marginLeft: 8,
+    opacity: 0.6,
+  },
+  expandIconRotated: {
+    transform: [{ rotate: '180deg' }],
   },
 }); 
