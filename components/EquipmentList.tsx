@@ -2,75 +2,75 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import { useCharacter } from '@/contexts/CharacterContext';
+import ashesData from '@/data/ashes.json';
+import incantationsData from '@/data/incantations.json';
+import itemsData from '@/data/items.json';
+import shieldsData from '@/data/shields.json';
+import sorceriesData from '@/data/sorceries.json';
+import spiritsData from '@/data/spirits.json';
+import talismansData from '@/data/talismans.json';
+import weaponsData from '@/data/weapons.json';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { ApiResponse, EldenRingItem } from '@/services/eldenRingApi';
-import React, { useEffect, useState } from 'react';
+import { EldenRingItem } from '@/services/eldenRingApi';
+import React, { useCallback, useState } from 'react';
 import {
-  ActivityIndicator,
   FlatList,
   Image,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 
 interface EquipmentListProps {
   title: string;
-  fetchData: (limit?: number) => Promise<ApiResponse<EldenRingItem>>;
-  searchData: (name: string) => Promise<ApiResponse<EldenRingItem>>;
+  type: 'weapons' | 'shields' | 'sorceries' | 'spirits' | 'talismans' | 'incantations' | 'items' | 'ashes';
   showRequirements?: boolean;
 }
 
-export function EquipmentList({ title, fetchData, searchData, showRequirements = false }: EquipmentListProps) {
-  const [items, setItems] = useState<EldenRingItem[]>([]);
-  const [loading, setLoading] = useState(true);
+const DATA_MAP = {
+  weapons: weaponsData,
+  shields: shieldsData,
+  sorceries: sorceriesData,
+  spirits: spiritsData,
+  talismans: talismansData,
+  incantations: incantationsData,
+  items: itemsData,
+  ashes: ashesData,
+} as const;
+
+export function EquipmentList({ title, type, showRequirements = false }: EquipmentListProps) {
+  const [items] = useState<EldenRingItem[]>(() => DATA_MAP[type]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [refreshing, setRefreshing] = useState(false);
+  const [showEquippableOnly, setShowEquippableOnly] = useState(false);
   const { canEquipWeapon } = useCharacter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
-  useEffect(() => {
-    loadItems();
-  }, []);
+  const filterItems = useCallback((query: string, equippableOnly: boolean) => {
+    let filtered = items;
 
-  const loadItems = async () => {
-    try {
-      setLoading(true);
-      const response = await fetchData(50); // Limit to 50 items for performance
-      setItems(response.data);
-    } catch (error) {
-      console.error('Error loading items:', error);
-    } finally {
-      setLoading(false);
+    if (query) {
+      const lowercaseQuery = query.toLowerCase();
+      filtered = filtered.filter(item => 
+        item.name.toLowerCase().includes(lowercaseQuery)
+      );
     }
-  };
 
-  const handleSearch = async (query: string) => {
+    if (equippableOnly) {
+      filtered = filtered.filter(item => canEquipWeapon((item as any).requiredAttributes));
+    }
+
+    return filtered;
+  }, [items, canEquipWeapon]);
+
+  const handleSearch = (query: string) => {
     setSearchQuery(query);
-    if (!query.trim()) {
-      loadItems();
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const response = await searchData(query);
-      setItems(response.data);
-    } catch (error) {
-      console.error('Error searching items:', error);
-    } finally {
-      setLoading(false);
-    }
   };
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    setSearchQuery('');
-    await loadItems();
-    setRefreshing(false);
+  const toggleEquippable = () => {
+    setShowEquippableOnly(!showEquippableOnly);
   };
 
   const renderItem = ({ item }: { item: EldenRingItem }) => {
@@ -128,12 +128,15 @@ export function EquipmentList({ title, fetchData, searchData, showRequirements =
     );
   };
 
-  if (loading && items.length === 0) {
+  const filteredItems = filterItems(searchQuery, showEquippableOnly);
+
+  if (filteredItems.length === 0) {
     return (
       <ThemedView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.tint} />
-          <ThemedText style={styles.loadingText}>Loading {title}...</ThemedText>
+        <View style={styles.emptyContainer}>
+          <ThemedText style={styles.emptyText}>
+            {searchQuery ? 'No items found matching your search.' : 'No items available.'}
+          </ThemedText>
         </View>
       </ThemedView>
     );
@@ -160,21 +163,12 @@ export function EquipmentList({ title, fetchData, searchData, showRequirements =
       </View>
 
       <FlatList
-        data={items}
+        data={filteredItems}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         style={styles.list}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
-        refreshing={refreshing}
-        onRefresh={handleRefresh}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <ThemedText style={styles.emptyText}>
-              {searchQuery ? 'No items found matching your search.' : 'No items available.'}
-            </ThemedText>
-          </View>
-        }
       />
     </ThemedView>
   );
@@ -283,15 +277,6 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 12,
     fontWeight: 'bold',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
   },
   emptyContainer: {
     padding: 40,
