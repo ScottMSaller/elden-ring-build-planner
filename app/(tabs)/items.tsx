@@ -3,7 +3,6 @@ import SafeAreaWrapper from '@/components/SafeAreaWrapper';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { eldenRingApi } from '@/services/eldenRingApi';
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
 
@@ -39,58 +38,6 @@ export default function ItemsScreen() {
     </TouchableOpacity>
   );
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'items':
-        return (
-          <EquipmentList
-            title="Items"
-            fetchData={eldenRingApi.getAllItems.bind(eldenRingApi)}
-            searchData={eldenRingApi.searchItems.bind(eldenRingApi)}
-            showRequirements={false}
-          />
-        );
-      case 'shields':
-        return (
-          <EquipmentList
-            title="Shields"
-            fetchData={eldenRingApi.getAllShields.bind(eldenRingApi)}
-            searchData={eldenRingApi.searchShields.bind(eldenRingApi)}
-            showRequirements={true}
-          />
-        );
-      case 'talismans':
-        return (
-          <EquipmentList
-            title="Talismans"
-            fetchData={eldenRingApi.getAllTalismans.bind(eldenRingApi)}
-            searchData={eldenRingApi.searchTalismans.bind(eldenRingApi)}
-            showRequirements={false}
-          />
-        );
-      case 'spirits':
-        return (
-          <EquipmentList
-            title="Spirit Summons"
-            fetchData={eldenRingApi.getAllSpirits.bind(eldenRingApi)}
-            searchData={eldenRingApi.searchSpirits.bind(eldenRingApi)}
-            showRequirements={false}
-          />
-        );
-      case 'ashes':
-        return (
-          <EquipmentList
-            title="Ashes of War"
-            fetchData={eldenRingApi.getAllAshesOfWar.bind(eldenRingApi)}
-            searchData={eldenRingApi.searchAshesOfWar.bind(eldenRingApi)}
-            showRequirements={false}
-          />
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
     <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
     <ThemedView style={styles.container}>
@@ -105,7 +52,12 @@ export default function ItemsScreen() {
         ))}
       </ScrollView>
       
-      {renderContent()}
+      <EquipmentList
+        title={categories.find(c => c.key === activeTab)?.title || ''}
+        type={activeTab}
+        showRequirements={activeTab === 'shields'}
+        key={activeTab}
+      />
     </ThemedView>
     </SafeAreaWrapper>
   );

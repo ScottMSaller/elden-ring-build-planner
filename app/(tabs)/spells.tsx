@@ -1,9 +1,8 @@
+import { EquipmentList } from '@/components/EquipmentList';
 import SafeAreaWrapper from '@/components/SafeAreaWrapper';
-import { SpellList } from '@/components/SpellList';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { eldenRingApi } from '@/services/eldenRingApi';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -36,19 +35,12 @@ export default function SpellsScreen() {
         <TabButton tab="sorceries" title="Sorceries" />
         <TabButton tab="incantations" title="Incantations" />
       </View>
-      {activeTab === 'sorceries' ? (
-        <SpellList
-          title="Sorceries"
-          fetchData={eldenRingApi.getAllSorceries.bind(eldenRingApi)}
-          searchData={eldenRingApi.searchSorceries.bind(eldenRingApi)}
-        />
-      ) : (
-        <SpellList
-          title="Incantations"
-          fetchData={eldenRingApi.getAllIncantations.bind(eldenRingApi)}
-          searchData={eldenRingApi.searchIncantations.bind(eldenRingApi)}
-        />
-      )}
+      <EquipmentList
+        title={activeTab === 'sorceries' ? 'Sorceries' : 'Incantations'}
+        type={activeTab}
+        showRequirements={true}
+        key={activeTab}
+      />
     </ThemedView>
     </SafeAreaWrapper>
   );

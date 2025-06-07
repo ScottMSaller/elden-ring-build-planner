@@ -4,11 +4,36 @@ const BASE_URL = 'https://eldenring.fanapis.com/api';
 export interface EldenRingItem {
   id: string;
   name: string;
-  image: string;
-  description: string;
+  image: string | null;
+  description: string | null;
+  category?: string | null;
   type?: string;
   effect?: string;
-  scaling?: string;
+  weight?: number;
+  requiredAttributes?: Array<{
+    name: string;
+    amount: number | null;
+  }>;
+  dmgNegation?: Array<{
+    name: string;
+    amount: number | null;
+  }>;
+  resistance?: Array<{
+    name: string;
+    amount: number | null;
+  }>;
+  attack?: Array<{
+    name: string;
+    amount: number | null;
+  }>;
+  defence?: Array<{
+    name: string;
+    amount: number | null;
+  }>;
+  scalesWith?: Array<{
+    name: string;
+    scaling?: string;
+  }>;
 }
 
 export interface Weapon extends EldenRingItem {

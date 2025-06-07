@@ -2,88 +2,126 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import { useCharacter } from '@/contexts/CharacterContext';
+import armorData from '@/data/armors.json';
+import ashesData from '@/data/ashes.json';
+import incantationsData from '@/data/incantations.json';
+import itemsData from '@/data/items.json';
+import shieldsData from '@/data/shields.json';
+import sorceriesData from '@/data/sorceries.json';
+import spiritsData from '@/data/spirits.json';
+import talismansData from '@/data/talismans.json';
+import weaponsData from '@/data/weapons.json';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { ApiResponse, EldenRingItem } from '@/services/eldenRingApi';
-import React, { useEffect, useState } from 'react';
+import { EldenRingItem } from '@/services/eldenRingApi';
+import React, { useCallback, useState } from 'react';
 import {
-  ActivityIndicator,
   FlatList,
   Image,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
+
+interface SpellRequirement {
+  name: string;
+  amount: number;
+}
+
+interface SpellItem extends EldenRingItem {
+  cost?: number;
+  slots?: number;
+  requires?: SpellRequirement[];
+}
 
 interface EquipmentListProps {
   title: string;
-  fetchData: (limit?: number) => Promise<ApiResponse<EldenRingItem>>;
-  searchData: (name: string) => Promise<ApiResponse<EldenRingItem>>;
+  type: 'weapons' | 'shields' | 'sorceries' | 'spirits' | 'talismans' | 'incantations' | 'items' | 'ashes' | 'armors';
   showRequirements?: boolean;
 }
 
-export function EquipmentList({ title, fetchData, searchData, showRequirements = false }: EquipmentListProps) {
-  const [items, setItems] = useState<EldenRingItem[]>([]);
-  const [loading, setLoading] = useState(true);
+const DATA_MAP = {
+  weapons: weaponsData,
+  shields: shieldsData,
+  sorceries: sorceriesData as SpellItem[],
+  spirits: spiritsData,
+  talismans: talismansData,
+  incantations: incantationsData as SpellItem[],
+  items: itemsData,
+  ashes: ashesData,
+  armors: armorData,
+} as const;
+
+export function EquipmentList({ title, type, showRequirements = false }: EquipmentListProps) {
+  const [items] = useState<EldenRingItem[]>(() => DATA_MAP[type]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [refreshing, setRefreshing] = useState(false);
+  const [showEquippableOnly, setShowEquippableOnly] = useState(false);
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const { canEquipWeapon } = useCharacter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
-  useEffect(() => {
-    loadItems();
-  }, []);
-
-  const loadItems = async () => {
-    try {
-      setLoading(true);
-      const response = await fetchData(50); // Limit to 50 items for performance
-      setItems(response.data);
-    } catch (error) {
-      console.error('Error loading items:', error);
-    } finally {
-      setLoading(false);
-    }
+  const toggleExpanded = (itemId: string) => {
+    setExpandedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
+      } else {
+        newSet.add(itemId);
+      }
+      return newSet;
+    });
   };
 
-  const handleSearch = async (query: string) => {
+  const filterItems = useCallback((query: string, equippableOnly: boolean) => {
+    let filtered = items;
+
+    if (query) {
+      const lowercaseQuery = query.toLowerCase();
+      filtered = filtered.filter(item => 
+        item.name.toLowerCase().includes(lowercaseQuery)
+      );
+    }
+
+    if (equippableOnly) {
+      filtered = filtered.filter(item => {
+        if (type === 'sorceries' || type === 'incantations') {
+          const spellItem = item as SpellItem;
+          return canEquipWeapon(spellItem.requires);
+        }
+        return canEquipWeapon((item as any).requiredAttributes);
+      });
+    }
+
+    return filtered;
+  }, [items, canEquipWeapon, type]);
+
+  const handleSearch = (query: string) => {
     setSearchQuery(query);
-    if (!query.trim()) {
-      loadItems();
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const response = await searchData(query);
-      setItems(response.data);
-    } catch (error) {
-      console.error('Error searching items:', error);
-    } finally {
-      setLoading(false);
-    }
   };
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    setSearchQuery('');
-    await loadItems();
-    setRefreshing(false);
+  const toggleEquippable = () => {
+    setShowEquippableOnly(!showEquippableOnly);
   };
 
-  const renderItem = ({ item }: { item: EldenRingItem }) => {
-    const canEquip = showRequirements ? canEquipWeapon((item as any).requiredAttributes) : true;
+  const renderItem = ({ item }: { item: EldenRingItem | SpellItem }) => {
+    const canEquip = showRequirements ? canEquipWeapon((item as any).requiredAttributes || (item as SpellItem).requires) : true;
+    const isExpanded = expandedItems.has(item.id);
+    const isSpell = type === 'sorceries' || type === 'incantations';
+    const spellItem = isSpell ? item as SpellItem : null;
     
     return (
-      <TouchableOpacity style={[
-        styles.itemCard,
-        !canEquip && styles.itemCardDisabled
-      ]}>
+      <TouchableOpacity 
+        style={[
+          styles.itemCard,
+          !canEquip && styles.itemCardDisabled
+        ]}
+        onPress={() => toggleExpanded(item.id)}
+      >
         <View style={styles.itemHeader}>
           <Image 
-            source={{ uri: item.image }} 
+            source={item.image ? { uri: item.image } : require('@/assets/images/partial-react-logo.png')}
             style={styles.itemImage}
             defaultSource={require('@/assets/images/partial-react-logo.png')}
           />
@@ -106,6 +144,9 @@ export function EquipmentList({ title, fetchData, searchData, showRequirements =
               <Text style={styles.requirementText}>Cannot Equip</Text>
             </View>
           )}
+          <ThemedText style={[styles.expandIcon, isExpanded && styles.expandIconRotated]}>
+            ▼
+          </ThemedText>
         </View>
         
         {item.description && (
@@ -114,30 +155,210 @@ export function EquipmentList({ title, fetchData, searchData, showRequirements =
           </ThemedText>
         )}
 
-        {showRequirements && (item as any).requiredAttributes && (
-          <View style={styles.requirements}>
-            <ThemedText style={styles.requirementsTitle}>Requirements:</ThemedText>
-            <ThemedText style={styles.requirementsText}>
-              {((item as any).requiredAttributes)
-                .map((req: { name: string; amount: string }) => `${req.name}: ${req.amount}`)
-                .join(', ')}
-            </ThemedText>
+        {isExpanded && type === 'weapons' && (
+          <View style={styles.statsContainer}>
+            <View style={styles.weightContainer}>
+              <ThemedText style={styles.statsLabel}>Weight</ThemedText>
+              <ThemedText style={styles.statsValue}>{item.weight?.toFixed(1) || 'N/A'}</ThemedText>
+            </View>
+
+            {item.category && (
+              <View style={styles.statSection}>
+                <ThemedText style={styles.statsLabel}>Category</ThemedText>
+                <ThemedText style={styles.statsValue}>{item.category}</ThemedText>
+              </View>
+            )}
+
+            {item.attack && item.attack.length > 0 && (
+              <View style={styles.statSection}>
+                <ThemedText style={styles.statsLabel}>Attack</ThemedText>
+                <View style={styles.statsGrid}>
+                  {item.attack.map((stat) => (
+                    <View key={stat.name} style={styles.statItem}>
+                      <ThemedText style={styles.statType}>{stat.name}</ThemedText>
+                      <ThemedText style={styles.statValue}>
+                        {stat.amount !== null ? stat.amount : 'N/A'}
+                      </ThemedText>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {item.defence && item.defence.length > 0 && (
+              <View style={styles.statSection}>
+                <ThemedText style={styles.statsLabel}>Defence</ThemedText>
+                <View style={styles.statsGrid}>
+                  {item.defence.map((stat) => (
+                    <View key={stat.name} style={styles.statItem}>
+                      <ThemedText style={styles.statType}>{stat.name}</ThemedText>
+                      <ThemedText style={styles.statValue}>
+                        {stat.amount !== null ? stat.amount : 'N/A'}
+                      </ThemedText>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {item.scalesWith && item.scalesWith.length > 0 && (
+              <View style={styles.statSection}>
+                <ThemedText style={styles.statsLabel}>Scaling</ThemedText>
+                <View style={styles.statsGrid}>
+                  {item.scalesWith.map((stat) => (
+                    <View key={stat.name} style={styles.statItem}>
+                      <ThemedText style={styles.statType}>{stat.name}</ThemedText>
+                      <ThemedText style={styles.statValue}>
+                        {stat.scaling || 'N/A'}
+                      </ThemedText>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {showRequirements && (item as any).requiredAttributes && (
+              <View style={styles.statSection}>
+                <ThemedText style={styles.statsLabel}>Requirements</ThemedText>
+                <View style={styles.statsGrid}>
+                  {(item as any).requiredAttributes.map((req: { name: string; amount: number | null }) => (
+                    <View key={req.name} style={styles.statItem}>
+                      <ThemedText style={styles.statType}>{req.name}</ThemedText>
+                      <ThemedText style={[
+                        styles.statValue,
+                        !canEquipWeapon([req]) && styles.statValueUnmet
+                      ]}>
+                        {req.amount !== null ? req.amount : 'N/A'}
+                      </ThemedText>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+          </View>
+        )}
+
+        {isExpanded && type === 'shields' && (
+          <View style={styles.statsContainer}>
+            <View style={styles.weightContainer}>
+              <ThemedText style={styles.statsLabel}>Weight</ThemedText>
+              <ThemedText style={styles.statsValue}>{item.weight?.toFixed(1) || 'N/A'}</ThemedText>
+            </View>
+
+            {item.attack && item.attack.length > 0 && (
+              <View style={styles.statSection}>
+                <ThemedText style={styles.statsLabel}>Attack</ThemedText>
+                <View style={styles.statsGrid}>
+                  {item.attack.map((stat) => (
+                    <View key={stat.name} style={styles.statItem}>
+                      <ThemedText style={styles.statType}>{stat.name}</ThemedText>
+                      <ThemedText style={styles.statValue}>
+                        {stat.amount !== null ? stat.amount : 'N/A'}
+                      </ThemedText>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {item.defence && item.defence.length > 0 && (
+              <View style={styles.statSection}>
+                <ThemedText style={styles.statsLabel}>Defence</ThemedText>
+                <View style={styles.statsGrid}>
+                  {item.defence.map((stat) => (
+                    <View key={stat.name} style={styles.statItem}>
+                      <ThemedText style={styles.statType}>{stat.name}</ThemedText>
+                      <ThemedText style={styles.statValue}>
+                        {stat.amount !== null ? stat.amount : 'N/A'}
+                      </ThemedText>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {item.scalesWith && item.scalesWith.length > 0 && (
+              <View style={styles.statSection}>
+                <ThemedText style={styles.statsLabel}>Scaling</ThemedText>
+                <View style={styles.statsGrid}>
+                  {item.scalesWith.map((stat) => (
+                    <View key={stat.name} style={styles.statItem}>
+                      <ThemedText style={styles.statType}>{stat.name}</ThemedText>
+                      <ThemedText style={styles.statValue}>
+                        {stat.scaling || 'N/A'}
+                      </ThemedText>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+          </View>
+        )}
+
+        {isExpanded && type === 'armors' && (
+          <View style={styles.statsContainer}>
+            <View style={styles.weightContainer}>
+              <ThemedText style={styles.statsLabel}>Weight</ThemedText>
+              <ThemedText style={styles.statsValue}>{item.weight?.toFixed(1) || 'N/A'}</ThemedText>
+            </View>
+            
+            {item.dmgNegation && item.dmgNegation.length > 0 && (
+              <View style={styles.dmgNegationContainer}>
+                <ThemedText style={styles.statsLabel}>Damage Negation</ThemedText>
+                <View style={styles.statsGrid}>
+                  {item.dmgNegation.map((stat) => (
+                    <View key={stat.name} style={styles.statItem}>
+                      <ThemedText style={styles.statType}>{stat.name}</ThemedText>
+                      <ThemedText style={styles.statValue}>
+                        {stat.amount !== null ? stat.amount.toFixed(1) : 'N/A'}
+                      </ThemedText>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+          </View>
+        )}
+
+        {isExpanded && isSpell && spellItem && (
+          <View style={styles.statsContainer}>
+            <View style={styles.weightContainer}>
+              <ThemedText style={styles.statsLabel}>FP Cost</ThemedText>
+              <ThemedText style={styles.statsValue}>{spellItem.cost || 'N/A'}</ThemedText>
+            </View>
+
+            {spellItem.slots && (
+              <View style={styles.weightContainer}>
+                <ThemedText style={styles.statsLabel}>Memory Slots</ThemedText>
+                <ThemedText style={styles.statsValue}>{spellItem.slots}</ThemedText>
+              </View>
+            )}
+
+            {showRequirements && spellItem.requires && spellItem.requires.length > 0 && (
+              <View style={styles.statSection}>
+                <ThemedText style={styles.statsLabel}>Requirements</ThemedText>
+                <View style={styles.statsGrid}>
+                  {spellItem.requires.map((req) => (
+                    <View key={req.name} style={styles.statItem}>
+                      <ThemedText style={styles.statType}>{req.name}</ThemedText>
+                      <ThemedText style={[
+                        styles.statValue,
+                        !canEquipWeapon([req]) && styles.statValueUnmet
+                      ]}>
+                        {req.amount !== null ? req.amount : 'N/A'}
+                      </ThemedText>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
           </View>
         )}
       </TouchableOpacity>
     );
   };
 
-  if (loading && items.length === 0) {
-    return (
-      <ThemedView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.tint} />
-          <ThemedText style={styles.loadingText}>Loading {title}...</ThemedText>
-        </View>
-      </ThemedView>
-    );
-  }
+  const filteredItems = filterItems(searchQuery, showEquippableOnly);
 
   return (
     <ThemedView style={styles.container}>
@@ -157,17 +378,31 @@ export function EquipmentList({ title, fetchData, searchData, showRequirements =
           value={searchQuery}
           onChangeText={handleSearch}
         />
+        {showRequirements && (
+          <TouchableOpacity
+            style={[
+              styles.filterButton,
+              showEquippableOnly && { backgroundColor: colors.tint }
+            ]}
+            onPress={toggleEquippable}
+          >
+            <Text style={[
+              styles.filterButtonText,
+              showEquippableOnly && styles.filterButtonTextActive
+            ]}>
+              {showEquippableOnly ? 'Show All' : 'Show Equippable'}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <FlatList
-        data={items}
+        data={filteredItems}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         style={styles.list}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
-        refreshing={refreshing}
-        onRefresh={handleRefresh}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <ThemedText style={styles.emptyText}>
@@ -284,15 +519,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-  },
   emptyContainer: {
     padding: 40,
     alignItems: 'center',
@@ -301,5 +527,80 @@ const styles = StyleSheet.create({
     fontSize: 16,
     opacity: 0.6,
     textAlign: 'center',
+  },
+  filterButton: {
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+  },
+  filterButtonText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  filterButtonTextActive: {
+    backgroundColor: '#ccc',
+  },
+  statsContainer: {
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: 8,
+  },
+  weightContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  dmgNegationContainer: {
+    marginTop: 4,
+  },
+  statsLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  statsValue: {
+    fontSize: 14,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -8,
+  },
+  statItem: {
+    width: '25%',
+    padding: 8,
+  },
+  statType: {
+    fontSize: 12,
+    opacity: 0.8,
+    marginBottom: 2,
+    textTransform: 'capitalize',
+  },
+  statValue: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  expandIcon: {
+    fontSize: 16,
+    marginLeft: 8,
+    opacity: 0.6,
+  },
+  expandIconRotated: {
+    transform: [{ rotate: '180deg' }],
+  },
+  statSection: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  statValueUnmet: {
+    color: '#ff4444',
   },
 }); 
