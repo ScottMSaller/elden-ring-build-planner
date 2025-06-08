@@ -13,7 +13,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 
 type CategoryType = 'all' | 'weapons' | 'shields' | 'sorceries' | 'spirits' | 'talismans' | 'incantations' | 'items' | 'ashes' | 'armors';
@@ -46,7 +46,7 @@ export default function FavoritesScreen() {
     <TouchableOpacity
       style={[
         styles.tabButton,
-        activeCategory === category.key && { backgroundColor: colors.tint },
+        activeCategory === category.key && styles.tabButtonActive,
       ]}
       onPress={() => setActiveCategory(category.key)}
     >
@@ -103,9 +103,11 @@ export default function FavoritesScreen() {
           style={styles.tabContainer}
           contentContainerStyle={styles.tabContent}
         >
-          {categories.map((category) => (
-            <TabButton key={category.key} category={category} />
-          ))}
+          <View style={styles.buttonContainer}>
+            {categories.map((category) => (
+              <TabButton key={category.key} category={category} />
+            ))}
+          </View>
         </ScrollView>
 
         <FlatList
@@ -141,28 +143,45 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   tabContainer: {
-    maxHeight: 60,
+    maxHeight: 120,
     paddingHorizontal: 16,
   },
   tabContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignItems: 'center',
     gap: 8,
-    paddingRight: 16,
+    paddingVertical: 8,
   },
   tabButton: {
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
     alignItems: 'center',
-    minWidth: 80,
+    minWidth: 100,
+    height: 36,
+    borderWidth: 1,
+    borderColor: '#000000',
+  },
+  tabButtonActive: {
+    backgroundColor: '#666666',
+    borderColor: '#666666',
   },
   tabButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#888',
+    color: '#000000',
+    textAlign: 'center',
   },
   tabButtonTextActive: {
-    color: 'white',
+    color: '#FFFFFF',
   },
   list: {
     flex: 1,
