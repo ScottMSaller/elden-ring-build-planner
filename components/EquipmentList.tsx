@@ -16,14 +16,16 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { EldenRingItem } from '@/services/eldenRingApi';
 import React, { useCallback, useState } from 'react';
 import {
-  FlatList,
-  Image,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    FlatList,
+    Image,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
+
+type ColorScheme = 'light' | 'dark';
 
 interface SpellRequirement {
   name: string;
@@ -61,8 +63,8 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const { canEquipWeapon } = useCharacter();
   const { toggleFavorite, isFavorite } = useFavorites();
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const colorScheme = useColorScheme() as ColorScheme;
+  const colors = Colors[colorScheme];
 
   const toggleExpanded = (itemId: string) => {
     setExpandedItems(prev => {
@@ -472,13 +474,16 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
           <TouchableOpacity
             style={[
               styles.filterButton,
-              showEquippableOnly && styles.filterButtonActive
+              {
+                backgroundColor: showEquippableOnly ? '#666666' : '#000000',
+                borderColor: showEquippableOnly ? '#666666' : '#FFFFFF',
+              }
             ]}
             onPress={toggleEquippable}
           >
             <Text style={[
               styles.filterButtonText,
-              showEquippableOnly && styles.filterButtonTextActive
+              { color: '#FFFFFF' }
             ]}>
               {showEquippableOnly ? 'Show All' : 'Show Equippable'}
             </Text>
@@ -622,26 +627,16 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 8,
     height: 36,
     borderWidth: 1,
-    borderColor: '#000000',
-  },
-  filterButtonActive: {
-    backgroundColor: '#666666',
-    borderColor: '#666666',
   },
   filterButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#000000',
     textAlign: 'center',
-  },
-  filterButtonTextActive: {
-    color: '#FFFFFF',
   },
   statsContainer: {
     marginTop: 12,

@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
 
 type ItemCategory = 'items' | 'shields' | 'talismans' | 'spirits' | 'ashes';
+type ColorScheme = 'light' | 'dark';
 
 const categories = [
   { key: 'items' as ItemCategory, title: 'Items' },
@@ -18,20 +19,23 @@ const categories = [
 
 export default function ItemsScreen() {
   const [activeTab, setActiveTab] = useState<ItemCategory>('items');
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const colorScheme = useColorScheme() as ColorScheme;
+  const colors = Colors[colorScheme];
 
   const TabButton = ({ category }: { category: { key: ItemCategory; title: string } }) => (
     <TouchableOpacity
       style={[
         styles.tabButton,
-        activeTab === category.key && { backgroundColor: colors.tint },
+        {
+          backgroundColor: activeTab === category.key ? '#666666' : 'rgba(255, 255, 255, 0.05)',
+          borderColor: activeTab === category.key ? '#666666' : colors.text,
+        },
       ]}
       onPress={() => setActiveTab(category.key)}
     >
       <Text style={[
         styles.tabButtonText,
-        activeTab === category.key && styles.tabButtonTextActive,
+        { color: activeTab === category.key ? '#FFFFFF' : colors.text },
       ]}>
         {category.title}
       </Text>
@@ -80,9 +84,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#000000',
     alignItems: 'center',
     justifyContent: 'center',
     minWidth: 80,
@@ -91,9 +93,5 @@ const styles = StyleSheet.create({
   tabButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#000000',
-  },
-  tabButtonTextActive: {
-    color: '#000000',
   },
 }); 
