@@ -174,21 +174,21 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
         )}
 
         {isExpanded && type === 'weapons' && (
-          <View style={styles.statsContainer}>
-            <View style={styles.weightContainer}>
+          <View style={[styles.statsContainer, { padding: 8 }]}>
+            <View style={[styles.weightContainer, { marginBottom: 4, paddingBottom: 4 }]}>
               <ThemedText style={styles.statsLabel}>Weight</ThemedText>
               <ThemedText style={styles.statsValue}>{item.weight?.toFixed(1) || 'N/A'}</ThemedText>
             </View>
 
             {item.category && (
-              <View style={styles.statSection}>
+              <View style={[styles.statSection, { borderTopWidth: 0, marginTop: 4, paddingTop: 4 }]}>
                 <ThemedText style={styles.statsLabel}>Category</ThemedText>
                 <ThemedText style={styles.statsValue}>{item.category}</ThemedText>
               </View>
             )}
 
             {item.attack && item.attack.length > 0 && (
-              <View style={styles.statSection}>
+              <View style={[styles.statSection, { marginTop: 12, paddingTop: 12, borderTopWidth: 1 }]}>
                 <ThemedText style={styles.statsLabel}>Attack</ThemedText>
                 <View style={styles.statsGrid}>
                   {item.attack.map((stat) => (
@@ -204,7 +204,7 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
             )}
 
             {item.defence && item.defence.length > 0 && (
-              <View style={styles.statSection}>
+              <View style={[styles.statSection, { marginTop: 12, paddingTop: 12, borderTopWidth: 1 }]}>
                 <ThemedText style={styles.statsLabel}>Defence</ThemedText>
                 <View style={styles.statsGrid}>
                   {item.defence.map((stat) => (
@@ -220,7 +220,7 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
             )}
 
             {item.scalesWith && item.scalesWith.length > 0 && (
-              <View style={styles.statSection}>
+              <View style={[styles.statSection, { marginTop: 12, paddingTop: 12, borderTopWidth: 1 }]}>
                 <ThemedText style={styles.statsLabel}>Scaling</ThemedText>
                 <View style={styles.statsGrid}>
                   {item.scalesWith.map((stat) => (
@@ -236,7 +236,7 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
             )}
 
             {showRequirements && (item as any).requiredAttributes && (
-              <View style={styles.statSection}>
+              <View style={[styles.statSection, { marginTop: 12, paddingTop: 12, borderTopWidth: 1 }]}>
                 <ThemedText style={styles.statsLabel}>Requirements</ThemedText>
                 <View style={styles.statsGrid}>
                   {(item as any).requiredAttributes.map((req: { name: string; amount: number | null }) => (
@@ -257,14 +257,14 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
         )}
 
         {isExpanded && type === 'shields' && (
-          <View style={styles.statsContainer}>
-            <View style={styles.weightContainer}>
+          <View style={[styles.statsContainer, { padding: 8 }]}>
+            <View style={[styles.weightContainer, { marginBottom: 4, paddingBottom: 4 }]}>
               <ThemedText style={styles.statsLabel}>Weight</ThemedText>
               <ThemedText style={styles.statsValue}>{item.weight?.toFixed(1) || 'N/A'}</ThemedText>
             </View>
 
             {item.attack && item.attack.length > 0 && (
-              <View style={styles.statSection}>
+              <View style={[styles.statSection, { borderTopWidth: 0, marginTop: 4, paddingTop: 4 }]}>
                 <ThemedText style={styles.statsLabel}>Attack</ThemedText>
                 <View style={styles.statsGrid}>
                   {item.attack.map((stat) => (
@@ -280,7 +280,7 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
             )}
 
             {item.defence && item.defence.length > 0 && (
-              <View style={styles.statSection}>
+              <View style={[styles.statSection, { borderTopWidth: 0, marginTop: 4, paddingTop: 4 }]}>
                 <ThemedText style={styles.statsLabel}>Defence</ThemedText>
                 <View style={styles.statsGrid}>
                   {item.defence.map((stat) => (
@@ -296,7 +296,7 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
             )}
 
             {item.scalesWith && item.scalesWith.length > 0 && (
-              <View style={styles.statSection}>
+              <View style={[styles.statSection, { borderTopWidth: 0, marginTop: 4, paddingTop: 4 }]}>
                 <ThemedText style={styles.statsLabel}>Scaling</ThemedText>
                 <View style={styles.statsGrid}>
                   {item.scalesWith.map((stat) => (
@@ -355,21 +355,21 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
         )}
 
         {isExpanded && type === 'spirits' && (
-          <View style={styles.statsContainer}>
+          <View style={[styles.statsContainer, { padding: 8 }]}>
             {(item as any).fpCost && parseInt((item as any).fpCost) > 0 && (
-              <View style={styles.weightContainer}>
+              <View style={[styles.weightContainer, { marginBottom: 4, paddingBottom: 4 }]}>
                 <ThemedText style={styles.statsLabel}>FP Cost</ThemedText>
                 <ThemedText style={styles.statsValue}>{(item as any).fpCost}</ThemedText>
               </View>
             )}
             {(item as any).hpCost && parseInt((item as any).hpCost) > 0 && (
-              <View style={styles.weightContainer}>
+              <View style={[styles.weightContainer, { marginBottom: 4, paddingBottom: 4 }]}>
                 <ThemedText style={styles.statsLabel}>HP Cost</ThemedText>
                 <ThemedText style={styles.statsValue}>{(item as any).hpCost}</ThemedText>
               </View>
             )}
             {(item as any).effect && (
-              <View style={styles.weightContainer}>
+              <View style={[styles.weightContainer, { borderBottomWidth: 0, marginBottom: 0, paddingBottom: 0 }]}>
                 <ThemedText style={styles.statsLabel}>Effect</ThemedText>
                 <ThemedText style={styles.statsValue}>{(item as any).effect}</ThemedText>
               </View>
@@ -378,31 +378,31 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
         )}
 
         {isExpanded && type === 'ashes' && (
-          <View style={styles.statsContainer}>
-            <View style={styles.weightContainer}>
+          <View style={[styles.statsContainer, { padding: 8 }]}>
+            <View style={[styles.weightContainer, { marginBottom: 4, paddingBottom: 4 }]}>
               <ThemedText style={styles.statsLabel}>Affinity</ThemedText>
               <ThemedText style={styles.statsValue}>{(item as any).affinity || 'N/A'}</ThemedText>
             </View>
             {(item as any).skill && (
-              <View style={styles.weightContainer}>
+              <View style={[styles.weightContainer, { borderBottomWidth: 0, marginBottom: 4, paddingBottom: 4 }]}>
                 <ThemedText style={styles.statsLabel}>Skill</ThemedText>
                 <ThemedText style={styles.statsValue}>{(item as any).skill}</ThemedText>
               </View>
             )}
             {(item as any).fpCost && parseInt((item as any).fpCost) > 0 && (
-              <View style={styles.weightContainer}>
+              <View style={[styles.weightContainer, { marginBottom: 4, paddingBottom: 4 }]}>
                 <ThemedText style={styles.statsLabel}>FP Cost</ThemedText>
                 <ThemedText style={styles.statsValue}>{(item as any).fpCost}</ThemedText>
               </View>
             )}
             {(item as any).hpCost && parseInt((item as any).hpCost) > 0 && (
-              <View style={styles.weightContainer}>
+              <View style={[styles.weightContainer, { marginBottom: 4, paddingBottom: 4 }]}>
                 <ThemedText style={styles.statsLabel}>HP Cost</ThemedText>
                 <ThemedText style={styles.statsValue}>{(item as any).hpCost}</ThemedText>
               </View>
             )}
             {(item as any).effect && (
-              <View style={styles.weightContainer}>
+              <View style={[styles.weightContainer, { borderBottomWidth: 0, marginBottom: 0, paddingBottom: 0 }]}>
                 <ThemedText style={styles.statsLabel}>Effect</ThemedText>
                 <ThemedText style={styles.statsValue}>{(item as any).effect}</ThemedText>
               </View>
@@ -411,21 +411,21 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
         )}
 
         {isExpanded && isSpell && spellItem && (
-          <View style={styles.statsContainer}>
-            <View style={styles.weightContainer}>
+          <View style={[styles.statsContainer, { padding: 8 }]}>
+            <View style={[styles.weightContainer, { marginBottom: 4, paddingBottom: 4 }]}>
               <ThemedText style={styles.statsLabel}>FP Cost</ThemedText>
               <ThemedText style={styles.statsValue}>{spellItem.cost || 'N/A'}</ThemedText>
             </View>
 
             {spellItem.slots && (
-              <View style={styles.weightContainer}>
+              <View style={[styles.weightContainer, { marginBottom: 4, paddingBottom: 4 }]}>
                 <ThemedText style={styles.statsLabel}>Memory Slots</ThemedText>
                 <ThemedText style={styles.statsValue}>{spellItem.slots}</ThemedText>
               </View>
             )}
 
             {showRequirements && spellItem.requires && spellItem.requires.length > 0 && (
-              <View style={styles.statSection}>
+              <View style={[styles.statSection, { borderTopWidth: 0, marginTop: 4, paddingTop: 4 }]}>
                 <ThemedText style={styles.statsLabel}>Requirements</ThemedText>
                 <View style={styles.statsGrid}>
                   {spellItem.requires.map((req) => (
@@ -472,7 +472,7 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
           <TouchableOpacity
             style={[
               styles.filterButton,
-              showEquippableOnly && { backgroundColor: colors.tint }
+              showEquippableOnly && styles.filterButtonActive
             ]}
             onPress={toggleEquippable}
           >
@@ -619,17 +619,29 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   filterButton: {
-    padding: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 8,
+    height: 36,
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
+    borderColor: '#000000',
+  },
+  filterButtonActive: {
+    backgroundColor: '#666666',
+    borderColor: '#666666',
   },
   filterButtonText: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: '600',
+    color: '#000000',
+    textAlign: 'center',
   },
   filterButtonTextActive: {
-    backgroundColor: '#ccc',
+    color: '#FFFFFF',
   },
   statsContainer: {
     marginTop: 12,

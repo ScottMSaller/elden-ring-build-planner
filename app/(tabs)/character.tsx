@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   resetButtonText: {
-    color: 'white',
+    color: '#000000',
     fontWeight: 'bold',
   },
   statsContainer: {

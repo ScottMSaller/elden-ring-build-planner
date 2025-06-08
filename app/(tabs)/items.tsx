@@ -80,16 +80,20 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#000000',
     alignItems: 'center',
+    justifyContent: 'center',
     minWidth: 80,
+    height: 36,
   },
   tabButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#888',
+    color: '#000000',
   },
   tabButtonTextActive: {
-    color: 'white',
+    color: '#000000',
   },
 }); 
