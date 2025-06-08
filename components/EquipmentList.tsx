@@ -317,6 +317,78 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
                 </View>
               </View>
             )}
+
+            {item.resistance && item.resistance.length > 0 && (
+              <View style={styles.statSection}>
+                <ThemedText style={styles.statsLabel}>Resistance</ThemedText>
+                <View style={styles.statsGrid}>
+                  {item.resistance.map((stat) => (
+                    <View key={stat.name} style={styles.statItem}>
+                      <ThemedText style={styles.statType}>{stat.name}</ThemedText>
+                      <ThemedText style={styles.statValue}>
+                        {stat.amount !== null ? stat.amount.toFixed(1) : 'N/A'}
+                      </ThemedText>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+          </View>
+        )}
+
+        {isExpanded && type === 'spirits' && (
+          <View style={styles.statsContainer}>
+            {(item as any).fpCost && parseInt((item as any).fpCost) > 0 && (
+              <View style={styles.weightContainer}>
+                <ThemedText style={styles.statsLabel}>FP Cost</ThemedText>
+                <ThemedText style={styles.statsValue}>{(item as any).fpCost}</ThemedText>
+              </View>
+            )}
+            {(item as any).hpCost && parseInt((item as any).hpCost) > 0 && (
+              <View style={styles.weightContainer}>
+                <ThemedText style={styles.statsLabel}>HP Cost</ThemedText>
+                <ThemedText style={styles.statsValue}>{(item as any).hpCost}</ThemedText>
+              </View>
+            )}
+            {(item as any).effect && (
+              <View style={styles.weightContainer}>
+                <ThemedText style={styles.statsLabel}>Effect</ThemedText>
+                <ThemedText style={styles.statsValue}>{(item as any).effect}</ThemedText>
+              </View>
+            )}
+          </View>
+        )}
+
+        {isExpanded && type === 'ashes' && (
+          <View style={styles.statsContainer}>
+            <View style={styles.weightContainer}>
+              <ThemedText style={styles.statsLabel}>Affinity</ThemedText>
+              <ThemedText style={styles.statsValue}>{(item as any).affinity || 'N/A'}</ThemedText>
+            </View>
+            {(item as any).skill && (
+              <View style={styles.weightContainer}>
+                <ThemedText style={styles.statsLabel}>Skill</ThemedText>
+                <ThemedText style={styles.statsValue}>{(item as any).skill}</ThemedText>
+              </View>
+            )}
+            {(item as any).fpCost && parseInt((item as any).fpCost) > 0 && (
+              <View style={styles.weightContainer}>
+                <ThemedText style={styles.statsLabel}>FP Cost</ThemedText>
+                <ThemedText style={styles.statsValue}>{(item as any).fpCost}</ThemedText>
+              </View>
+            )}
+            {(item as any).hpCost && parseInt((item as any).hpCost) > 0 && (
+              <View style={styles.weightContainer}>
+                <ThemedText style={styles.statsLabel}>HP Cost</ThemedText>
+                <ThemedText style={styles.statsValue}>{(item as any).hpCost}</ThemedText>
+              </View>
+            )}
+            {(item as any).effect && (
+              <View style={styles.weightContainer}>
+                <ThemedText style={styles.statsLabel}>Effect</ThemedText>
+                <ThemedText style={styles.statsValue}>{(item as any).effect}</ThemedText>
+              </View>
+            )}
           </View>
         )}
 
