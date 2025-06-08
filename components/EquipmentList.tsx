@@ -2,6 +2,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import { useCharacter } from '@/contexts/CharacterContext';
+import { useFavorites } from '@/contexts/FavoritesContext';
 import armorData from '@/data/armors.json';
 import ashesData from '@/data/ashes.json';
 import incantationsData from '@/data/incantations.json';
@@ -59,6 +60,7 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
   const [showEquippableOnly, setShowEquippableOnly] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const { canEquipWeapon } = useCharacter();
+  const { toggleFavorite, isFavorite } = useFavorites();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
@@ -110,6 +112,7 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
     const isExpanded = expandedItems.has(item.id);
     const isSpell = type === 'sorceries' || type === 'incantations';
     const spellItem = isSpell ? item as SpellItem : null;
+    const itemIsFavorite = isFavorite(item.id);
     
     return (
       <TouchableOpacity 
@@ -139,14 +142,29 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
               <ThemedText style={styles.itemEffect}>{item.effect}</ThemedText>
             )}
           </View>
+          <TouchableOpacity
+            style={styles.favoriteButton}
+            onPress={() => toggleFavorite({ 
+              id: item.id, 
+              type, 
+              name: item.name, 
+              image: item.image as string | undefined 
+            })}
+          >
+            <ThemedText style={[styles.favoriteIcon, itemIsFavorite && styles.favoriteIconActive]}>
+              {itemIsFavorite ? '★' : '☆'}
+            </ThemedText>
+          </TouchableOpacity>
           {!canEquip && (
             <View style={styles.requirementBadge}>
               <Text style={styles.requirementText}>Cannot Equip</Text>
             </View>
           )}
-          <ThemedText style={[styles.expandIcon, isExpanded && styles.expandIconRotated]}>
-            ▼
-          </ThemedText>
+          {!(type === 'talismans' || (type === 'items' && !item.effect)) && (
+            <ThemedText style={[styles.expandIcon, isExpanded && styles.expandIconRotated]}>
+              ▼
+            </ThemedText>
+          )}
         </View>
         
         {item.description && (
@@ -674,5 +692,16 @@ const styles = StyleSheet.create({
   },
   statValueUnmet: {
     color: '#ff4444',
+  },
+  favoriteButton: {
+    padding: 8,
+    marginRight: 8,
+  },
+  favoriteIcon: {
+    fontSize: 24,
+    color: '#888',
+  },
+  favoriteIconActive: {
+    color: '#FFD700',
   },
 }); 
