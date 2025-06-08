@@ -43,7 +43,7 @@ export default function TabLayout() {
         name="weapons"
         options={{
           title: 'Weapons',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="sword.fill" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="bolt.fill" color={color} />,
         }}
       />
       <Tabs.Screen
@@ -65,6 +65,13 @@ export default function TabLayout() {
         options={{
           title: 'Items',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="bag.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="favorites"
+        options={{
+          title: 'Favorites',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="star.fill" color={color} />,
         }}
       />
     </Tabs>
