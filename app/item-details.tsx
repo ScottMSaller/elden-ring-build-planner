@@ -13,7 +13,7 @@ import spiritsData from '@/data/spirits.json';
 import talismansData from '@/data/talismans.json';
 import weaponsData from '@/data/weapons.json';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
@@ -29,11 +29,27 @@ const DATA_MAP = {
   armors: armorData,
 };
 
+// Type guards for advanced property checks
+function hasAttack(item: any): item is { attack: { name: string; amount: number | null }[] } {
+  return Array.isArray(item.attack);
+}
+function hasDefence(item: any): item is { defence: { name: string; amount: number | null }[] } {
+  return Array.isArray(item.defence);
+}
+function hasScalesWith(item: any): item is { scalesWith: { name: string; scaling?: string }[] } {
+  return Array.isArray(item.scalesWith);
+}
+function hasDmgNegation(item: any): item is { dmgNegation: { name: string; amount: number | null }[] } {
+  return Array.isArray(item.dmgNegation);
+}
+function hasResistance(item: any): item is { resistance: { name: string; amount: number | null }[] } {
+  return Array.isArray(item.resistance);
+}
+
 export default function ItemDetailsScreen() {
   const { id, type } = useLocalSearchParams();
-  const router = useRouter();
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const colors = Colors[(colorScheme ?? 'light') as 'light' | 'dark'];
   const { toggleFavorite, isFavorite } = useFavorites();
 
   const item = DATA_MAP[type as keyof typeof DATA_MAP].find(i => i.id === id);
@@ -63,7 +79,7 @@ export default function ItemDetailsScreen() {
                 id: item.id, 
                 type: type as any, 
                 name: item.name, 
-                image: item.image as string | undefined,
+                image: (item as any).image as string | undefined,
                 requiredAttributes: (item as any).requiredAttributes,
                 requires: (item as any).requires
               })}
@@ -79,7 +95,7 @@ export default function ItemDetailsScreen() {
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.imageContainer}>
             <Image
-              source={item.image ? { uri: item.image } : require('@/assets/images/partial-react-logo.png')}
+              source={(item as any).image ? { uri: (item as any).image } : require('@/assets/images/partial-react-logo.png')}
               style={styles.image}
               defaultSource={require('@/assets/images/partial-react-logo.png')}
               resizeMode="contain"
@@ -88,45 +104,45 @@ export default function ItemDetailsScreen() {
 
           <ThemedText style={styles.name}>{item.name}</ThemedText>
           
-          {item.type && (
-            <ThemedText style={styles.type}>{item.type}</ThemedText>
+          {(item as any).type && (
+            <ThemedText style={styles.type}>{(item as any).type}</ThemedText>
           )}
 
-          {item.description && (
+          {(item as any).description && (
             <View style={styles.section}>
-              <ThemedText style={styles.description}>{item.description}</ThemedText>
+              <ThemedText style={styles.description}>{(item as any).description}</ThemedText>
             </View>
           )}
 
-          {item.effect && (
+          {(item as any).effect && (
             <View style={styles.section}>
               <ThemedText style={styles.sectionTitle}>Effect</ThemedText>
-              <ThemedText style={styles.sectionText}>{item.effect}</ThemedText>
+              <ThemedText style={styles.sectionText}>{(item as any).effect}</ThemedText>
             </View>
           )}
 
-          {item.weight && (
+          {(item as any).weight && (
             <View style={styles.section}>
               <ThemedText style={styles.sectionTitle}>Weight</ThemedText>
-              <ThemedText style={styles.sectionText}>{item.weight.toFixed(1)}</ThemedText>
+              <ThemedText style={styles.sectionText}>{(item as any).weight.toFixed(1)}</ThemedText>
             </View>
           )}
 
-          {item.fpCost && parseInt(item.fpCost) > 0 && (
+          {(item as any).fpCost && parseInt((item as any).fpCost) > 0 && (
             <View style={styles.section}>
               <ThemedText style={styles.sectionTitle}>FP Cost</ThemedText>
-              <ThemedText style={styles.sectionText}>{item.fpCost}</ThemedText>
+              <ThemedText style={styles.sectionText}>{(item as any).fpCost}</ThemedText>
             </View>
           )}
 
-          {item.hpCost && parseInt(item.hpCost) > 0 && (
+          {(item as any).hpCost && parseInt((item as any).hpCost) > 0 && (
             <View style={styles.section}>
               <ThemedText style={styles.sectionTitle}>HP Cost</ThemedText>
-              <ThemedText style={styles.sectionText}>{item.hpCost}</ThemedText>
+              <ThemedText style={styles.sectionText}>{(item as any).hpCost}</ThemedText>
             </View>
           )}
 
-          {item.attack && item.attack.length > 0 && (
+          {hasAttack(item) && item.attack.length > 0 && (
             <View style={styles.section}>
               <ThemedText style={styles.sectionTitle}>Attack</ThemedText>
               <View style={styles.statsGrid}>
@@ -142,7 +158,7 @@ export default function ItemDetailsScreen() {
             </View>
           )}
 
-          {item.defence && item.defence.length > 0 && (
+          {hasDefence(item) && item.defence.length > 0 && (
             <View style={styles.section}>
               <ThemedText style={styles.sectionTitle}>Defence</ThemedText>
               <View style={styles.statsGrid}>
@@ -158,7 +174,7 @@ export default function ItemDetailsScreen() {
             </View>
           )}
 
-          {item.scalesWith && item.scalesWith.length > 0 && (
+          {hasScalesWith(item) && item.scalesWith.length > 0 && (
             <View style={styles.section}>
               <ThemedText style={styles.sectionTitle}>Scaling</ThemedText>
               <View style={styles.statsGrid}>
@@ -174,7 +190,7 @@ export default function ItemDetailsScreen() {
             </View>
           )}
 
-          {item.dmgNegation && item.dmgNegation.length > 0 && (
+          {hasDmgNegation(item) && item.dmgNegation.length > 0 && (
             <View style={styles.section}>
               <ThemedText style={styles.sectionTitle}>Damage Negation</ThemedText>
               <View style={styles.statsGrid}>
@@ -190,7 +206,7 @@ export default function ItemDetailsScreen() {
             </View>
           )}
 
-          {item.resistance && item.resistance.length > 0 && (
+          {hasResistance(item) && item.resistance.length > 0 && (
             <View style={styles.section}>
               <ThemedText style={styles.sectionTitle}>Resistance</ThemedText>
               <View style={styles.statsGrid}>

@@ -1,6 +1,6 @@
-const fs = require('fs');
-const path = require('path');
-const fetch = require('node-fetch');
+import fs from 'fs';
+import fetch from 'node-fetch';
+import path from 'path';
 
 const BASE_URL = 'https://raw.githubusercontent.com/deliton/eldenring-api/main/api/public/data/';
 
