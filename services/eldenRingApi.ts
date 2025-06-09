@@ -10,30 +10,12 @@ export interface EldenRingItem {
   type?: string;
   effect?: string;
   weight?: number;
-  requiredAttributes?: Array<{
-    name: string;
-    amount: number | null;
-  }>;
-  dmgNegation?: Array<{
-    name: string;
-    amount: number | null;
-  }>;
-  resistance?: Array<{
-    name: string;
-    amount: number | null;
-  }>;
-  attack?: Array<{
-    name: string;
-    amount: number | null;
-  }>;
-  defence?: Array<{
-    name: string;
-    amount: number | null;
-  }>;
-  scalesWith?: Array<{
-    name: string;
-    scaling?: string;
-  }>;
+  requiredAttributes?: { name: string; amount: number | null }[];
+  dmgNegation?: { name: string; amount: number | null }[];
+  resistance?: { name: string; amount: number | null }[];
+  attack?: { name: string; amount: number | null }[];
+  defence?: { name: string; amount: number | null }[];
+  scalesWith?: { name: string; scaling?: string }[];
 }
 
 export interface Weapon extends EldenRingItem {

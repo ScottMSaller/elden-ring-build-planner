@@ -38,14 +38,10 @@ export function SpellList({ title, fetchData, searchData }: SpellListProps) {
   const [items, setItems] = useState<SpellItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [refreshing, setRefreshing] = useState(false);
+  const [refreshing] = useState(false);
   const { stats } = useCharacter();
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
-
-  useEffect(() => {
-    loadItems();
-  }, []);
+  const colors = Colors[(colorScheme ?? 'light') as 'light' | 'dark'];
 
   const loadItems = async () => {
     try {
@@ -58,6 +54,11 @@ export function SpellList({ title, fetchData, searchData }: SpellListProps) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadItems();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
@@ -94,7 +95,7 @@ export function SpellList({ title, fetchData, searchData }: SpellListProps) {
       ]}>
         <View style={styles.itemHeader}>
           <Image 
-            source={{ uri: item.image }} 
+            source={item.image ? { uri: item.image } : require('@/assets/images/partial-react-logo.png')}
             style={styles.itemImage}
             defaultSource={require('@/assets/images/partial-react-logo.png')}
           />
