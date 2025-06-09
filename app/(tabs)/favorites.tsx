@@ -2,6 +2,7 @@ import SafeAreaWrapper from '@/components/SafeAreaWrapper';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
+import { useCharacter } from '@/contexts/CharacterContext';
 import { FavoriteItem, useFavorites } from '@/contexts/FavoritesContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useRouter } from 'expo-router';
@@ -33,7 +34,8 @@ const categories: { key: CategoryType; title: string }[] = [
 ];
 
 export default function FavoritesScreen() {
-  const { favorites, toggleFavorite } = useFavorites();
+  const { favorites, toggleFavorite, isFavorite } = useFavorites();
+  const { canEquipWeapon } = useCharacter();
   const [activeCategory, setActiveCategory] = useState<CategoryType>('all');
   const colorScheme = useColorScheme() as ColorScheme;
   const colors = Colors[colorScheme];
@@ -63,36 +65,60 @@ export default function FavoritesScreen() {
     </TouchableOpacity>
   );
 
-  const renderItem = ({ item }: { item: FavoriteItem }) => (
-    <TouchableOpacity 
-      style={styles.itemCard}
-      onPress={() => router.push({
-        pathname: '/item-details',
-        params: { id: item.id, type: item.type }
-      })}
-    >
-      <View style={styles.itemHeader}>
-        <Image 
-          source={item.image ? { uri: item.image } : require('@/assets/images/partial-react-logo.png')}
-          style={styles.itemImage}
-          defaultSource={require('@/assets/images/partial-react-logo.png')}
-        />
-        <View style={styles.itemInfo}>
-          <ThemedText style={styles.itemName}>{item.name}</ThemedText>
-          <ThemedText style={styles.itemType}>{categories.find(c => c.key === item.type)?.title || item.type}</ThemedText>
+  const renderItem = ({ item }: { item: FavoriteItem }) => {
+    const canEquip = ['weapons', 'shields', 'sorceries', 'incantations'].includes(item.type) 
+      ? canEquipWeapon((item as any).requiredAttributes || (item as any).requires)
+      : true;
+    const itemIsFavorite = isFavorite(item.id);
+    
+    return (
+      <TouchableOpacity 
+        style={[
+          styles.itemCard,
+          !canEquip && styles.itemCardDisabled
+        ]}
+        onPress={() => router.push({
+          pathname: '/item-details',
+          params: { id: item.id, type: item.type }
+        })}
+      >
+        <View style={styles.itemHeader}>
+          <Image 
+            source={item.image ? { uri: item.image } : require('@/assets/images/partial-react-logo.png')}
+            style={styles.itemImage}
+            defaultSource={require('@/assets/images/partial-react-logo.png')}
+          />
+          <View style={styles.itemInfo}>
+            <ThemedText style={[
+              styles.itemName,
+              !canEquip && styles.itemNameDisabled
+            ]}>
+              {item.name}
+            </ThemedText>
+            <ThemedText style={styles.itemType}>{categories.find(c => c.key === item.type)?.title || item.type}</ThemedText>
+          </View>
+          <View style={styles.controlsContainer}>
+            <TouchableOpacity
+              style={styles.favoriteButton}
+              onPress={(e) => {
+                e.stopPropagation();
+                toggleFavorite(item);
+              }}
+            >
+              <ThemedText style={[styles.favoriteIcon, itemIsFavorite && styles.favoriteIconActive]}>
+                {itemIsFavorite ? '★' : '☆'}
+              </ThemedText>
+            </TouchableOpacity>
+            {!canEquip && (
+              <View style={styles.requirementBadge}>
+                <Text style={styles.requirementText}>Cannot Equip</Text>
+              </View>
+            )}
+          </View>
         </View>
-        <TouchableOpacity
-          style={styles.favoriteButton}
-          onPress={(e) => {
-            e.stopPropagation();
-            toggleFavorite(item);
-          }}
-        >
-          <ThemedText style={styles.favoriteIcon}>★</ThemedText>
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
@@ -191,7 +217,7 @@ const styles = StyleSheet.create({
   },
   itemHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   itemImage: {
     width: 50,
@@ -201,6 +227,7 @@ const styles = StyleSheet.create({
   },
   itemInfo: {
     flex: 1,
+    paddingRight: 8,
   },
   itemName: {
     fontSize: 18,
@@ -211,8 +238,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     opacity: 0.8,
   },
+  controlsContainer: {
+    alignItems: 'flex-end',
+    minWidth: 80,
+    gap: 4,
+  },
+  favoriteButton: {
+    padding: 4,
+  },
   favoriteIcon: {
     fontSize: 24,
+    color: '#FFD700',
+  },
+  favoriteIconActive: {
     color: '#FFD700',
   },
   emptyContainer: {
@@ -224,7 +262,21 @@ const styles = StyleSheet.create({
     opacity: 0.6,
     textAlign: 'center',
   },
-  favoriteButton: {
-    padding: 4,
+  itemCardDisabled: {
+    opacity: 0.7,
+  },
+  itemNameDisabled: {
+    opacity: 0.8,
+  },
+  requirementBadge: {
+    backgroundColor: '#ff4444',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  requirementText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 }); 
