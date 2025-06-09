@@ -29,6 +29,23 @@ const DATA_MAP = {
   armors: armorData,
 };
 
+// Type guards for advanced property checks
+function hasAttack(item: any): item is { attack: { name: string; amount: number | null }[] } {
+  return Array.isArray(item.attack);
+}
+function hasDefence(item: any): item is { defence: { name: string; amount: number | null }[] } {
+  return Array.isArray(item.defence);
+}
+function hasScalesWith(item: any): item is { scalesWith: { name: string; scaling?: string }[] } {
+  return Array.isArray(item.scalesWith);
+}
+function hasDmgNegation(item: any): item is { dmgNegation: { name: string; amount: number | null }[] } {
+  return Array.isArray(item.dmgNegation);
+}
+function hasResistance(item: any): item is { resistance: { name: string; amount: number | null }[] } {
+  return Array.isArray(item.resistance);
+}
+
 export default function ItemDetailsScreen() {
   const { id, type } = useLocalSearchParams();
   const colorScheme = useColorScheme();
@@ -125,7 +142,7 @@ export default function ItemDetailsScreen() {
             </View>
           )}
 
-          {item.attack && item.attack.length > 0 && (
+          {hasAttack(item) && item.attack.length > 0 && (
             <View style={styles.section}>
               <ThemedText style={styles.sectionTitle}>Attack</ThemedText>
               <View style={styles.statsGrid}>
@@ -141,7 +158,7 @@ export default function ItemDetailsScreen() {
             </View>
           )}
 
-          {item.defence && item.defence.length > 0 && (
+          {hasDefence(item) && item.defence.length > 0 && (
             <View style={styles.section}>
               <ThemedText style={styles.sectionTitle}>Defence</ThemedText>
               <View style={styles.statsGrid}>
@@ -157,7 +174,7 @@ export default function ItemDetailsScreen() {
             </View>
           )}
 
-          {item.scalesWith && item.scalesWith.length > 0 && (
+          {hasScalesWith(item) && item.scalesWith.length > 0 && (
             <View style={styles.section}>
               <ThemedText style={styles.sectionTitle}>Scaling</ThemedText>
               <View style={styles.statsGrid}>
@@ -173,7 +190,7 @@ export default function ItemDetailsScreen() {
             </View>
           )}
 
-          {item.dmgNegation && item.dmgNegation.length > 0 && (
+          {hasDmgNegation(item) && item.dmgNegation.length > 0 && (
             <View style={styles.section}>
               <ThemedText style={styles.sectionTitle}>Damage Negation</ThemedText>
               <View style={styles.statsGrid}>
@@ -189,7 +206,7 @@ export default function ItemDetailsScreen() {
             </View>
           )}
 
-          {item.resistance && item.resistance.length > 0 && (
+          {hasResistance(item) && item.resistance.length > 0 && (
             <View style={styles.section}>
               <ThemedText style={styles.sectionTitle}>Resistance</ThemedText>
               <View style={styles.statsGrid}>

@@ -6,7 +6,7 @@ import React from 'react';
 
 export default function WeaponsScreen() {
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const colors = Colors[(colorScheme ?? 'light') as 'light' | 'dark'];
 
   return (
     <SafeAreaWrapper style={{ backgroundColor: colors.background}}>
