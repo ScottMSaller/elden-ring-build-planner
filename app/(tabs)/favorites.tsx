@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   tabContainer: {
-    maxHeight: 120,
+    maxHeight: 65,
     paddingHorizontal: 16,
   },
   tabContent: {

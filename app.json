@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "another-counter",
-    "slug": "another-counter",
+    "name": "Elden Ring Build Planner",
+    "slug": "elden-ring-build-planner",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "anothercounter",
+    "scheme": "eldenringbuildplanner",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -37,6 +37,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4414de67-49c6-46ef-9ae2-579b147e9af8"
+      }
+    },
+    "owner": "scott_saller"
   }
 }
