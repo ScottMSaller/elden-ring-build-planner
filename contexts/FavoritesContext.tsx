@@ -6,6 +6,8 @@ export interface FavoriteItem {
   type: 'weapons' | 'shields' | 'sorceries' | 'spirits' | 'talismans' | 'incantations' | 'items' | 'ashes' | 'armors';
   name: string;
   image?: string;
+  requiredAttributes?: { name: string; amount: number }[];
+  requires?: { name: string; amount: number }[];
 }
 
 interface FavoritesContextType {

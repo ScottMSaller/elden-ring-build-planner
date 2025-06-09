@@ -16,13 +16,13 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { EldenRingItem } from '@/services/eldenRingApi';
 import React, { useCallback, useState } from 'react';
 import {
-    FlatList,
-    Image,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 type ColorScheme = 'light' | 'dark';
@@ -144,33 +144,39 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
               <ThemedText style={styles.itemEffect}>{item.effect}</ThemedText>
             )}
           </View>
-          <TouchableOpacity
-            style={styles.favoriteButton}
-            onPress={() => toggleFavorite({ 
-              id: item.id, 
-              type, 
-              name: item.name, 
-              image: item.image as string | undefined 
-            })}
-          >
-            <ThemedText style={[styles.favoriteIcon, itemIsFavorite && styles.favoriteIconActive]}>
-              {itemIsFavorite ? '★' : '☆'}
-            </ThemedText>
-          </TouchableOpacity>
-          {!canEquip && (
-            <View style={styles.requirementBadge}>
-              <Text style={styles.requirementText}>Cannot Equip</Text>
+          <View style={styles.controlsContainer}>
+            <View style={styles.topControls}>
+              <TouchableOpacity
+                style={styles.favoriteButton}
+                onPress={() => toggleFavorite({ 
+                  id: item.id, 
+                  type, 
+                  name: item.name, 
+                  image: item.image as string | undefined,
+                  requiredAttributes: (item as any).requiredAttributes,
+                  requires: (item as SpellItem).requires
+                })}
+              >
+                <ThemedText style={[styles.favoriteIcon, itemIsFavorite && styles.favoriteIconActive]}>
+                  {itemIsFavorite ? '★' : '☆'}
+                </ThemedText>
+              </TouchableOpacity>
+              {!(type === 'talismans' || type === 'items') && (
+                <ThemedText style={[styles.expandIcon, isExpanded && styles.expandIconRotated]}>
+                  ▼
+                </ThemedText>
+              )}
             </View>
-          )}
-          {!(type === 'talismans' || (type === 'items' && !item.effect)) && (
-            <ThemedText style={[styles.expandIcon, isExpanded && styles.expandIconRotated]}>
-              ▼
-            </ThemedText>
-          )}
+            {!canEquip && (
+              <View style={styles.requirementBadge}>
+                <Text style={styles.requirementText}>Cannot Equip</Text>
+              </View>
+            )}
+          </View>
         </View>
         
         {item.description && (
-          <ThemedText style={styles.itemDescription} numberOfLines={3}>
+          <ThemedText style={styles.itemDescription} numberOfLines={isExpanded ? undefined : 3}>
             {item.description}
           </ThemedText>
         )}
@@ -553,7 +559,6 @@ const styles = StyleSheet.create({
   itemHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 8,
   },
   itemImage: {
     width: 50,
@@ -563,6 +568,7 @@ const styles = StyleSheet.create({
   },
   itemInfo: {
     flex: 1,
+    paddingRight: 8,
   },
   itemName: {
     fontSize: 18,
@@ -603,10 +609,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     opacity: 0.7,
   },
+  requirementBadgeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 0,
+    paddingRight: 2,
+  },
   requirementBadge: {
     backgroundColor: '#ff4444',
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingBottom: 2,
+    paddingTop: 2,
+    marginTop: 3,
+    marginBottom: 3,
     borderRadius: 6,
   },
   requirementText: {
@@ -710,5 +725,16 @@ const styles = StyleSheet.create({
   },
   favoriteIconActive: {
     color: '#FFD700',
+  },
+  controlsContainer: {
+    alignItems: 'flex-end',
+    minWidth: 80,
+  },
+  topControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    paddingTop: 2,
+    paddingBottom: 2,
   },
 }); 

@@ -55,160 +55,158 @@ export default function ItemDetailsScreen() {
         options={{
           headerBackTitle: 'Back',
           headerTitle: '',
-        }} 
-      />
-      <SafeAreaWrapper style={{ backgroundColor: colors.background }}>
-        <ThemedView style={styles.container}>
-          <View style={styles.header}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            </TouchableOpacity>
+          contentStyle: { backgroundColor: colors.background },
+          headerRight: () => (
             <TouchableOpacity
               style={styles.favoriteButton}
               onPress={() => toggleFavorite({ 
                 id: item.id, 
                 type: type as any, 
                 name: item.name, 
-                image: item.image as string | undefined 
+                image: item.image as string | undefined,
+                requiredAttributes: (item as any).requiredAttributes,
+                requires: (item as any).requires
               })}
             >
               <ThemedText style={[styles.favoriteIcon, itemIsFavorite && styles.favoriteIconActive]}>
                 {itemIsFavorite ? '★' : '☆'}
               </ThemedText>
             </TouchableOpacity>
+          ),
+        }}
+      />
+      <ThemedView style={styles.container}>
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          <View style={styles.imageContainer}>
+            <Image
+              source={item.image ? { uri: item.image } : require('@/assets/images/partial-react-logo.png')}
+              style={styles.image}
+              defaultSource={require('@/assets/images/partial-react-logo.png')}
+              resizeMode="contain"
+            />
           </View>
 
-          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-            <View style={styles.imageContainer}>
-              <Image
-                source={item.image ? { uri: item.image } : require('@/assets/images/partial-react-logo.png')}
-                style={styles.image}
-                defaultSource={require('@/assets/images/partial-react-logo.png')}
-                resizeMode="contain"
-              />
+          <ThemedText style={styles.name}>{item.name}</ThemedText>
+          
+          {item.type && (
+            <ThemedText style={styles.type}>{item.type}</ThemedText>
+          )}
+
+          {item.description && (
+            <View style={styles.section}>
+              <ThemedText style={styles.description}>{item.description}</ThemedText>
             </View>
+          )}
 
-            <ThemedText style={styles.name}>{item.name}</ThemedText>
-            
-            {item.type && (
-              <ThemedText style={styles.type}>{item.type}</ThemedText>
-            )}
+          {item.effect && (
+            <View style={styles.section}>
+              <ThemedText style={styles.sectionTitle}>Effect</ThemedText>
+              <ThemedText style={styles.sectionText}>{item.effect}</ThemedText>
+            </View>
+          )}
 
-            {item.description && (
-              <View style={styles.section}>
-                <ThemedText style={styles.description}>{item.description}</ThemedText>
+          {item.weight && (
+            <View style={styles.section}>
+              <ThemedText style={styles.sectionTitle}>Weight</ThemedText>
+              <ThemedText style={styles.sectionText}>{item.weight.toFixed(1)}</ThemedText>
+            </View>
+          )}
+
+          {item.fpCost && parseInt(item.fpCost) > 0 && (
+            <View style={styles.section}>
+              <ThemedText style={styles.sectionTitle}>FP Cost</ThemedText>
+              <ThemedText style={styles.sectionText}>{item.fpCost}</ThemedText>
+            </View>
+          )}
+
+          {item.hpCost && parseInt(item.hpCost) > 0 && (
+            <View style={styles.section}>
+              <ThemedText style={styles.sectionTitle}>HP Cost</ThemedText>
+              <ThemedText style={styles.sectionText}>{item.hpCost}</ThemedText>
+            </View>
+          )}
+
+          {item.attack && item.attack.length > 0 && (
+            <View style={styles.section}>
+              <ThemedText style={styles.sectionTitle}>Attack</ThemedText>
+              <View style={styles.statsGrid}>
+                {item.attack.map((stat) => (
+                  <View key={stat.name} style={styles.statItem}>
+                    <ThemedText style={styles.statType}>{stat.name}</ThemedText>
+                    <ThemedText style={styles.statValue}>
+                      {stat.amount !== null ? stat.amount : 'N/A'}
+                    </ThemedText>
+                  </View>
+                ))}
               </View>
-            )}
+            </View>
+          )}
 
-            {item.effect && (
-              <View style={styles.section}>
-                <ThemedText style={styles.sectionTitle}>Effect</ThemedText>
-                <ThemedText style={styles.sectionText}>{item.effect}</ThemedText>
+          {item.defence && item.defence.length > 0 && (
+            <View style={styles.section}>
+              <ThemedText style={styles.sectionTitle}>Defence</ThemedText>
+              <View style={styles.statsGrid}>
+                {item.defence.map((stat) => (
+                  <View key={stat.name} style={styles.statItem}>
+                    <ThemedText style={styles.statType}>{stat.name}</ThemedText>
+                    <ThemedText style={styles.statValue}>
+                      {stat.amount !== null ? stat.amount : 'N/A'}
+                    </ThemedText>
+                  </View>
+                ))}
               </View>
-            )}
+            </View>
+          )}
 
-            {item.weight && (
-              <View style={styles.section}>
-                <ThemedText style={styles.sectionTitle}>Weight</ThemedText>
-                <ThemedText style={styles.sectionText}>{item.weight.toFixed(1)}</ThemedText>
+          {item.scalesWith && item.scalesWith.length > 0 && (
+            <View style={styles.section}>
+              <ThemedText style={styles.sectionTitle}>Scaling</ThemedText>
+              <View style={styles.statsGrid}>
+                {item.scalesWith.map((stat) => (
+                  <View key={stat.name} style={styles.statItem}>
+                    <ThemedText style={styles.statType}>{stat.name}</ThemedText>
+                    <ThemedText style={styles.statValue}>
+                      {stat.scaling || 'N/A'}
+                    </ThemedText>
+                  </View>
+                ))}
               </View>
-            )}
+            </View>
+          )}
 
-            {item.fpCost && parseInt(item.fpCost) > 0 && (
-              <View style={styles.section}>
-                <ThemedText style={styles.sectionTitle}>FP Cost</ThemedText>
-                <ThemedText style={styles.sectionText}>{item.fpCost}</ThemedText>
+          {item.dmgNegation && item.dmgNegation.length > 0 && (
+            <View style={styles.section}>
+              <ThemedText style={styles.sectionTitle}>Damage Negation</ThemedText>
+              <View style={styles.statsGrid}>
+                {item.dmgNegation.map((stat) => (
+                  <View key={stat.name} style={styles.statItem}>
+                    <ThemedText style={styles.statType}>{stat.name}</ThemedText>
+                    <ThemedText style={styles.statValue}>
+                      {stat.amount !== null ? stat.amount.toFixed(1) : 'N/A'}
+                    </ThemedText>
+                  </View>
+                ))}
               </View>
-            )}
+            </View>
+          )}
 
-            {item.hpCost && parseInt(item.hpCost) > 0 && (
-              <View style={styles.section}>
-                <ThemedText style={styles.sectionTitle}>HP Cost</ThemedText>
-                <ThemedText style={styles.sectionText}>{item.hpCost}</ThemedText>
+          {item.resistance && item.resistance.length > 0 && (
+            <View style={styles.section}>
+              <ThemedText style={styles.sectionTitle}>Resistance</ThemedText>
+              <View style={styles.statsGrid}>
+                {item.resistance.map((stat) => (
+                  <View key={stat.name} style={styles.statItem}>
+                    <ThemedText style={styles.statType}>{stat.name}</ThemedText>
+                    <ThemedText style={styles.statValue}>
+                      {stat.amount !== null ? stat.amount.toFixed(1) : 'N/A'}
+                    </ThemedText>
+                  </View>
+                ))}
               </View>
-            )}
-
-            {item.attack && item.attack.length > 0 && (
-              <View style={styles.section}>
-                <ThemedText style={styles.sectionTitle}>Attack</ThemedText>
-                <View style={styles.statsGrid}>
-                  {item.attack.map((stat) => (
-                    <View key={stat.name} style={styles.statItem}>
-                      <ThemedText style={styles.statType}>{stat.name}</ThemedText>
-                      <ThemedText style={styles.statValue}>
-                        {stat.amount !== null ? stat.amount : 'N/A'}
-                      </ThemedText>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {item.defence && item.defence.length > 0 && (
-              <View style={styles.section}>
-                <ThemedText style={styles.sectionTitle}>Defence</ThemedText>
-                <View style={styles.statsGrid}>
-                  {item.defence.map((stat) => (
-                    <View key={stat.name} style={styles.statItem}>
-                      <ThemedText style={styles.statType}>{stat.name}</ThemedText>
-                      <ThemedText style={styles.statValue}>
-                        {stat.amount !== null ? stat.amount : 'N/A'}
-                      </ThemedText>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {item.scalesWith && item.scalesWith.length > 0 && (
-              <View style={styles.section}>
-                <ThemedText style={styles.sectionTitle}>Scaling</ThemedText>
-                <View style={styles.statsGrid}>
-                  {item.scalesWith.map((stat) => (
-                    <View key={stat.name} style={styles.statItem}>
-                      <ThemedText style={styles.statType}>{stat.name}</ThemedText>
-                      <ThemedText style={styles.statValue}>
-                        {stat.scaling || 'N/A'}
-                      </ThemedText>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {item.dmgNegation && item.dmgNegation.length > 0 && (
-              <View style={styles.section}>
-                <ThemedText style={styles.sectionTitle}>Damage Negation</ThemedText>
-                <View style={styles.statsGrid}>
-                  {item.dmgNegation.map((stat) => (
-                    <View key={stat.name} style={styles.statItem}>
-                      <ThemedText style={styles.statType}>{stat.name}</ThemedText>
-                      <ThemedText style={styles.statValue}>
-                        {stat.amount !== null ? stat.amount.toFixed(1) : 'N/A'}
-                      </ThemedText>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {item.resistance && item.resistance.length > 0 && (
-              <View style={styles.section}>
-                <ThemedText style={styles.sectionTitle}>Resistance</ThemedText>
-                <View style={styles.statsGrid}>
-                  {item.resistance.map((stat) => (
-                    <View key={stat.name} style={styles.statItem}>
-                      <ThemedText style={styles.statType}>{stat.name}</ThemedText>
-                      <ThemedText style={styles.statValue}>
-                        {stat.amount !== null ? stat.amount.toFixed(1) : 'N/A'}
-                      </ThemedText>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
-          </ScrollView>
-        </ThemedView>
-      </SafeAreaWrapper>
+            </View>
+          )}
+        </ScrollView>
+      </ThemedView>
     </>
   );
 }
@@ -222,7 +220,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingTop: 0,
+    paddingBottom: 0,
   },
   backButton: {
     padding: 8,

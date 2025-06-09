@@ -17,8 +17,8 @@ import {
 
 export default function CharacterScreen() {
   const { stats, updateStat, resetStats, getAvailablePoints } = useCharacter();
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const colorScheme = useColorScheme() as 'light' | 'dark';
+  const colors = Colors[colorScheme];
 
   const handleStatChange = (stat: keyof typeof stats, value: string) => {
     const numValue = parseInt(value) || 1;
@@ -243,9 +243,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonText: {
-    color: 'white',
+    color: '#000000',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
   statInput: {
     width: 60,
