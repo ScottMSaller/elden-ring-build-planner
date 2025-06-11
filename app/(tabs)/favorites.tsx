@@ -145,7 +145,7 @@ export default function FavoritesScreen() {
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           style={styles.list}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, { paddingBottom: 50 }]}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <ThemedText style={styles.emptyText}>

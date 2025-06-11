@@ -14,7 +14,7 @@ import talismansData from '@/data/talismans.json';
 import weaponsData from '@/data/weapons.json';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { EldenRingItem } from '@/services/eldenRingApi';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   FlatList,
   Image,
@@ -56,6 +56,418 @@ const DATA_MAP = {
   armors: armorData,
 } as const;
 
+// Memoized item component for FlatList
+const EquipmentListItem = React.memo(function EquipmentListItem({
+  item,
+  type,
+  showRequirements,
+  expandedItems,
+  toggleExpanded,
+  canEquipWeapon,
+  isFavorite,
+  toggleFavorite
+}: any) {
+  const canEquip = showRequirements ? canEquipWeapon((item as any).requiredAttributes || (item as any).requires) : true;
+  const isExpanded = expandedItems.has(item.id);
+  const isSpell = type === 'sorceries' || type === 'incantations';
+  const spellItem = isSpell ? item : null;
+  const itemIsFavorite = isFavorite(item.id);
+  
+  return (
+    <TouchableOpacity 
+      style={[
+        styles.itemCard,
+        !canEquip && styles.itemCardDisabled
+      ]}
+      onPress={() => toggleExpanded(item.id)}
+    >
+      <View style={styles.itemHeader}>
+        <Image 
+          source={item.image ? { uri: item.image } : require('@/assets/images/partial-react-logo.png')}
+          style={styles.itemImage}
+          defaultSource={require('@/assets/images/partial-react-logo.png')}
+        />
+        <View style={styles.itemInfo}>
+          <ThemedText style={[
+            styles.itemName,
+            !canEquip && styles.itemNameDisabled
+          ]}>
+            {item.name}
+          </ThemedText>
+          {item.type && (
+            <ThemedText style={styles.itemType}>{item.type}</ThemedText>
+          )}
+          {item.effect && (
+            <ThemedText style={styles.itemEffect}>{item.effect}</ThemedText>
+          )}
+        </View>
+        <View style={styles.controlsContainer}>
+          <View style={styles.topControls}>
+            <TouchableOpacity
+              style={styles.favoriteButton}
+              onPress={() => toggleFavorite({ 
+                id: item.id, 
+                type, 
+                name: item.name, 
+                image: item.image as string | undefined,
+                requiredAttributes: (item as any).requiredAttributes,
+                requires: (item as SpellItem).requires
+              })}
+            >
+              <ThemedText style={[styles.favoriteIcon, itemIsFavorite && styles.favoriteIconActive]}>
+                {itemIsFavorite ? '★' : '☆'}
+              </ThemedText>
+            </TouchableOpacity>
+            {!(type === 'talismans' || type === 'items') && (
+              <ThemedText style={[styles.expandIcon, isExpanded && styles.expandIconRotated]}>
+                ▼
+              </ThemedText>
+            )}
+          </View>
+          {!canEquip && (
+            <View style={styles.requirementBadge}>
+              <Text style={styles.requirementText}>Cannot Equip</Text>
+            </View>
+          )}
+        </View>
+      </View>
+      
+      {item.description && (
+        <ThemedText style={styles.itemDescription} numberOfLines={isExpanded ? undefined : 3}>
+          {item.description}
+        </ThemedText>
+      )}
+
+      {isExpanded && type === 'weapons' && (
+        <View style={[styles.statsContainer, { padding: 8 }]}>
+          <View style={[styles.weightContainer, { marginBottom: 4, paddingBottom: 4 }]}>
+            <ThemedText style={styles.statsLabel}>Weight</ThemedText>
+            <ThemedText style={styles.statsValue}>{item.weight != null ? item.weight.toFixed(1) : 'N/A'}</ThemedText>
+          </View>
+
+          {item.category && (
+            <View style={[styles.statSection, { borderTopWidth: 0, marginTop: 4, paddingTop: 4 }]}>
+              <ThemedText style={styles.statsLabel}>Category</ThemedText>
+              <ThemedText style={styles.statsValue}>{item.category}</ThemedText>
+            </View>
+          )}
+
+          {item.attack && item.attack.length > 0 && (
+            <View style={[styles.statSection, { marginTop: 12, paddingTop: 12, borderTopWidth: 1 }]}>
+              <ThemedText style={styles.statsLabel}>Attack</ThemedText>
+              <View style={styles.statsGrid}>
+                {item.attack.map((stat: { name: string; amount?: number | null }) => (
+                  <View key={stat.name} style={styles.statItem}>
+                    <ThemedText style={styles.statType}>{stat.name}</ThemedText>
+                    <ThemedText style={styles.statValue}>
+                      {stat.amount != null ? Math.floor(stat.amount) : 'N/A'}
+                    </ThemedText>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {item.defence && item.defence.length > 0 && (
+            <View style={[styles.statSection, { marginTop: 12, paddingTop: 12, borderTopWidth: 1 }]}>
+              <ThemedText style={styles.statsLabel}>Defence</ThemedText>
+              <View style={styles.statsGrid}>
+                {item.defence.map((stat: { name: string; amount?: number | null }) => (
+                  <View key={stat.name} style={styles.statItem}>
+                    <ThemedText style={styles.statType}>{stat.name}</ThemedText>
+                    <ThemedText style={styles.statValue}>
+                      {stat.amount != null ? Math.floor(stat.amount) : 'N/A'}
+                    </ThemedText>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {item.scalesWith && item.scalesWith.length > 0 && (
+            <View style={[styles.statSection, { marginTop: 12, paddingTop: 12, borderTopWidth: 1 }]}>
+              <ThemedText style={styles.statsLabel}>Scaling</ThemedText>
+              <View style={styles.statsGrid}>
+                {item.scalesWith.map((stat: { name: string; scaling?: string }) => (
+                  <View key={stat.name} style={styles.statItem}>
+                    <ThemedText style={styles.statType}>{stat.name}</ThemedText>
+                    <ThemedText style={styles.statValue}>
+                      {stat.scaling || 'N/A'}
+                    </ThemedText>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {showRequirements && (item as any).requiredAttributes && (
+            <View style={[styles.statSection, { marginTop: 12, paddingTop: 12, borderTopWidth: 1 }]}>
+              <ThemedText style={styles.statsLabel}>Requirements</ThemedText>
+              <View style={styles.statsGrid}>
+                {((item as any).requiredAttributes.filter(
+                  (req: { name: string; amount: number | null }) =>
+                    req.name && req.name !== '-' && req.amount && req.amount > 0
+                ).length === 0) ? (
+                  <ThemedText style={[styles.statValue, { marginLeft: 8 }]}>N/A</ThemedText>
+                ) : (
+                  (item as any).requiredAttributes
+                    .filter(
+                      (req: { name: string; amount: number | null }) =>
+                        req.name && req.name !== '-' && req.amount && req.amount > 0
+                    )
+                    .map((req: { name: string; amount: number | null }) => (
+                      <View key={req.name} style={styles.statItem}>
+                        <ThemedText style={styles.statType}>{req.name}</ThemedText>
+                        <ThemedText style={[
+                          styles.statValue,
+                          !canEquipWeapon([req]) && styles.statValueUnmet
+                        ]}>
+                          {req.amount != null ? Math.floor(req.amount) : 'N/A'}
+                        </ThemedText>
+                      </View>
+                    ))
+                )}
+              </View>
+            </View>
+          )}
+        </View>
+      )}
+
+      {isExpanded && type === 'shields' && (
+        <View style={[styles.statsContainer, { padding: 8 }]}>
+          <View style={[styles.weightContainer, { marginBottom: 4, paddingBottom: 4 }]}>
+            <ThemedText style={styles.statsLabel}>Weight</ThemedText>
+            <ThemedText style={styles.statsValue}>{item.weight != null ? item.weight.toFixed(1) : 'N/A'}</ThemedText>
+          </View>
+
+          {item.attack && item.attack.length > 0 && (
+            <View style={[styles.statSection, { borderTopWidth: 0, marginTop: 4, paddingTop: 4 }]}>
+              <ThemedText style={styles.statsLabel}>Attack</ThemedText>
+              <View style={styles.statsGrid}>
+                {item.attack.map((stat: { name: string; amount?: number | null }) => (
+                  <View key={stat.name} style={styles.statItem}>
+                    <ThemedText style={styles.statType}>{stat.name}</ThemedText>
+                    <ThemedText style={styles.statValue}>
+                      {stat.amount != null ? Math.floor(stat.amount) : 'N/A'}
+                    </ThemedText>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {item.defence && item.defence.length > 0 && (
+            <View style={[styles.statSection, { borderTopWidth: 0, marginTop: 4, paddingTop: 4 }]}>
+              <ThemedText style={styles.statsLabel}>Defence</ThemedText>
+              <View style={styles.statsGrid}>
+                {item.defence.map((stat: { name: string; amount?: number | null }) => (
+                  <View key={stat.name} style={styles.statItem}>
+                    <ThemedText style={styles.statType}>{stat.name}</ThemedText>
+                    <ThemedText style={styles.statValue}>
+                      {stat.amount != null ? Math.floor(stat.amount) : 'N/A'}
+                    </ThemedText>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {item.scalesWith && item.scalesWith.length > 0 && (
+            <View style={[styles.statSection, { borderTopWidth: 0, marginTop: 4, paddingTop: 4 }]}>
+              <ThemedText style={styles.statsLabel}>Scaling</ThemedText>
+              <View style={styles.statsGrid}>
+                {item.scalesWith.map((stat: { name: string; scaling?: string }) => (
+                  <View key={stat.name} style={styles.statItem}>
+                    <ThemedText style={styles.statType}>{stat.name}</ThemedText>
+                    <ThemedText style={styles.statValue}>
+                      {stat.scaling || 'N/A'}
+                    </ThemedText>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {showRequirements && (item as any).requiredAttributes && (
+            <View style={[styles.statSection, { marginTop: 12, paddingTop: 12, borderTopWidth: 1 }]}>
+              <ThemedText style={styles.statsLabel}>Requirements</ThemedText>
+              <View style={styles.statsGrid}>
+                {((item as any).requiredAttributes.filter(
+                  (req: { name: string; amount: number | null }) =>
+                    req.name && req.name !== '-' && req.amount && req.amount > 0
+                ).length === 0) ? (
+                  <ThemedText style={[styles.statValue, { marginLeft: 8 }]}>N/A</ThemedText>
+                ) : (
+                  (item as any).requiredAttributes
+                    .filter(
+                      (req: { name: string; amount: number | null }) =>
+                        req.name && req.name !== '-' && req.amount && req.amount > 0
+                    )
+                    .map((req: { name: string; amount: number | null }) => (
+                      <View key={req.name} style={styles.statItem}>
+                        <ThemedText style={styles.statType}>{req.name}</ThemedText>
+                        <ThemedText style={[
+                          styles.statValue,
+                          !canEquipWeapon([req]) && styles.statValueUnmet
+                        ]}>
+                          {req.amount != null ? Math.floor(req.amount) : 'N/A'}
+                        </ThemedText>
+                      </View>
+                    ))
+                )}
+              </View>
+            </View>
+          )}
+        </View>
+      )}
+
+      {isExpanded && type === 'armors' && (
+        <View style={styles.statsContainer}>
+          <View style={styles.weightContainer}>
+            <ThemedText style={styles.statsLabel}>Weight</ThemedText>
+            <ThemedText style={styles.statsValue}>{item.weight != null ? item.weight.toFixed(1) : 'N/A'}</ThemedText>
+          </View>
+          
+          {item.dmgNegation && item.dmgNegation.length > 0 && (
+            <View style={styles.dmgNegationContainer}>
+              <ThemedText style={styles.statsLabel}>Damage Negation</ThemedText>
+              <View style={styles.statsGrid}>
+                {item.dmgNegation.map((stat: { name: string; amount?: number | null }) => (
+                  <View key={stat.name} style={styles.statItem}>
+                    <ThemedText style={styles.statType}>{stat.name}</ThemedText>
+                    <ThemedText style={styles.statValue}>
+                      {stat.amount != null ? Math.floor(stat.amount) : 'N/A'}
+                    </ThemedText>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {item.resistance && item.resistance.length > 0 && (
+            <View style={styles.statSection}>
+              <ThemedText style={styles.statsLabel}>Resistance</ThemedText>
+              <View style={styles.statsGrid}>
+                {item.resistance.map((stat: { name: string; amount?: number | null }) => (
+                  <View key={stat.name} style={styles.statItem}>
+                    <ThemedText style={styles.statType}>{stat.name}</ThemedText>
+                    <ThemedText style={styles.statValue}>
+                      {stat.amount != null ? Math.floor(stat.amount) : 'N/A'}
+                    </ThemedText>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+        </View>
+      )}
+
+      {isExpanded && type === 'spirits' && (
+        <View style={[styles.statsContainer, { padding: 8 }]}>
+          {(item as any).fpCost && parseInt((item as any).fpCost) > 0 && (
+            <View style={[styles.weightContainer, { marginBottom: 4, paddingBottom: 4 }]}>
+              <ThemedText style={styles.statsLabel}>FP Cost</ThemedText>
+              <ThemedText style={styles.statsValue}>{(item as any).fpCost}</ThemedText>
+            </View>
+          )}
+          {(item as any).hpCost && parseInt((item as any).hpCost) > 0 && (
+            <View style={[styles.weightContainer, { marginBottom: 4, paddingBottom: 4 }]}>
+              <ThemedText style={styles.statsLabel}>HP Cost</ThemedText>
+              <ThemedText style={styles.statsValue}>{(item as any).hpCost}</ThemedText>
+            </View>
+          )}
+          {(item as any).effect && (
+            <View style={[styles.weightContainer, { borderBottomWidth: 0, marginBottom: 0, paddingBottom: 0 }]}>
+              <ThemedText style={styles.statsLabel}>Effect</ThemedText>
+              <ThemedText style={styles.statsValue}>{(item as any).effect}</ThemedText>
+            </View>
+          )}
+        </View>
+      )}
+
+      {isExpanded && type === 'ashes' && (
+        <View style={[styles.statsContainer, { padding: 8 }]}>
+          <View style={[styles.weightContainer, { marginBottom: 4, paddingBottom: 4 }]}>
+            <ThemedText style={styles.statsLabel}>Affinity</ThemedText>
+            <ThemedText style={styles.statsValue}>{(item as any).affinity || 'N/A'}</ThemedText>
+          </View>
+          {(item as any).skill && (
+            <View style={[styles.weightContainer, { borderBottomWidth: 0, marginBottom: 4, paddingBottom: 4 }]}>
+              <ThemedText style={styles.statsLabel}>Skill</ThemedText>
+              <ThemedText style={styles.statsValue}>{(item as any).skill}</ThemedText>
+            </View>
+          )}
+          {(item as any).fpCost && parseInt((item as any).fpCost) > 0 && (
+            <View style={[styles.weightContainer, { marginBottom: 4, paddingBottom: 4 }]}>
+              <ThemedText style={styles.statsLabel}>FP Cost</ThemedText>
+              <ThemedText style={styles.statsValue}>{(item as any).fpCost}</ThemedText>
+            </View>
+          )}
+          {(item as any).hpCost && parseInt((item as any).hpCost) > 0 && (
+            <View style={[styles.weightContainer, { marginBottom: 4, paddingBottom: 4 }]}>
+              <ThemedText style={styles.statsLabel}>HP Cost</ThemedText>
+              <ThemedText style={styles.statsValue}>{(item as any).hpCost}</ThemedText>
+            </View>
+          )}
+          {(item as any).effect && (
+            <View style={[styles.weightContainer, { borderBottomWidth: 0, marginBottom: 0, paddingBottom: 0 }]}>
+              <ThemedText style={styles.statsLabel}>Effect</ThemedText>
+              <ThemedText style={styles.statsValue}>{(item as any).effect}</ThemedText>
+            </View>
+          )}
+        </View>
+      )}
+
+      {isExpanded && isSpell && spellItem && (
+        <View style={[styles.statsContainer, { padding: 8 }]}>
+          <View style={[styles.weightContainer, { marginBottom: 4, paddingBottom: 4 }]}>
+            <ThemedText style={styles.statsLabel}>FP Cost</ThemedText>
+            <ThemedText style={styles.statsValue}>{spellItem.cost || 'N/A'}</ThemedText>
+          </View>
+
+          {spellItem.slots && (
+            <View style={[styles.weightContainer, { marginBottom: 4, paddingBottom: 4 }]}>
+              <ThemedText style={styles.statsLabel}>Memory Slots</ThemedText>
+              <ThemedText style={styles.statsValue}>{spellItem.slots}</ThemedText>
+            </View>
+          )}
+
+          {showRequirements && spellItem.requires && spellItem.requires.length > 0 && (
+            <View style={[styles.statSection, { borderTopWidth: 0, marginTop: 4, paddingTop: 4 }]}>
+              <ThemedText style={styles.statsLabel}>Requirements</ThemedText>
+              <View style={styles.statsGrid}>
+                {(spellItem.requires.filter(
+                  (req: { name: string; amount: number | null }) =>
+                    req.name && req.name !== '-' && req.amount && req.amount > 0
+                ).length === 0) ? (
+                  <ThemedText style={[styles.statValue, { marginLeft: 8 }]}>N/A</ThemedText>
+                ) : (
+                  spellItem.requires
+                    .filter(
+                      (req: { name: string; amount: number | null }) =>
+                        req.name && req.name !== '-' && req.amount && req.amount > 0
+                    )
+                    .map((req: { name: string; amount: number | null }) => (
+                      <View key={req.name} style={styles.statItem}>
+                        <ThemedText style={styles.statType}>{req.name}</ThemedText>
+                        <ThemedText style={[
+                          styles.statValue,
+                          !canEquipWeapon([req]) && styles.statValueUnmet
+                        ]}>
+                          {req.amount != null ? Math.floor(req.amount) : 'N/A'}
+                        </ThemedText>
+                      </View>
+                    ))
+                )}
+              </View>
+            </View>
+          )}
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+});
+
 export function EquipmentList({ title, type, showRequirements = false }: EquipmentListProps) {
   const [items] = useState<EldenRingItem[]>(() => DATA_MAP[type]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -65,6 +477,7 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
   const { toggleFavorite, isFavorite } = useFavorites();
   const colorScheme = useColorScheme() as ColorScheme;
   const colors = Colors[colorScheme];
+  const flatListRef = useRef<FlatList>(null);
 
   const toggleExpanded = (itemId: string) => {
     setExpandedItems(prev => {
@@ -103,357 +516,12 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
   };
 
   const toggleEquippable = () => {
-    setShowEquippableOnly(!showEquippableOnly);
-  };
-
-  const renderItem = ({ item }: { item: EldenRingItem | SpellItem }) => {
-    const canEquip = showRequirements ? canEquipWeapon((item as any).requiredAttributes || (item as SpellItem).requires) : true;
-    const isExpanded = expandedItems.has(item.id);
-    const isSpell = type === 'sorceries' || type === 'incantations';
-    const spellItem = isSpell ? item as SpellItem : null;
-    const itemIsFavorite = isFavorite(item.id);
-    
-    return (
-      <TouchableOpacity 
-        style={[
-          styles.itemCard,
-          !canEquip && styles.itemCardDisabled
-        ]}
-        onPress={() => toggleExpanded(item.id)}
-      >
-        <View style={styles.itemHeader}>
-          <Image 
-            source={item.image ? { uri: item.image } : require('@/assets/images/partial-react-logo.png')}
-            style={styles.itemImage}
-            defaultSource={require('@/assets/images/partial-react-logo.png')}
-          />
-          <View style={styles.itemInfo}>
-            <ThemedText style={[
-              styles.itemName,
-              !canEquip && styles.itemNameDisabled
-            ]}>
-              {item.name}
-            </ThemedText>
-            {item.type && (
-              <ThemedText style={styles.itemType}>{item.type}</ThemedText>
-            )}
-            {item.effect && (
-              <ThemedText style={styles.itemEffect}>{item.effect}</ThemedText>
-            )}
-          </View>
-          <View style={styles.controlsContainer}>
-            <View style={styles.topControls}>
-              <TouchableOpacity
-                style={styles.favoriteButton}
-                onPress={() => toggleFavorite({ 
-                  id: item.id, 
-                  type, 
-                  name: item.name, 
-                  image: item.image as string | undefined,
-                  requiredAttributes: (item as any).requiredAttributes,
-                  requires: (item as SpellItem).requires
-                })}
-              >
-                <ThemedText style={[styles.favoriteIcon, itemIsFavorite && styles.favoriteIconActive]}>
-                  {itemIsFavorite ? '★' : '☆'}
-                </ThemedText>
-              </TouchableOpacity>
-              {!(type === 'talismans' || type === 'items') && (
-                <ThemedText style={[styles.expandIcon, isExpanded && styles.expandIconRotated]}>
-                  ▼
-                </ThemedText>
-              )}
-            </View>
-            {!canEquip && (
-              <View style={styles.requirementBadge}>
-                <Text style={styles.requirementText}>Cannot Equip</Text>
-              </View>
-            )}
-          </View>
-        </View>
-        
-        {item.description && (
-          <ThemedText style={styles.itemDescription} numberOfLines={isExpanded ? undefined : 3}>
-            {item.description}
-          </ThemedText>
-        )}
-
-        {isExpanded && type === 'weapons' && (
-          <View style={[styles.statsContainer, { padding: 8 }]}>
-            <View style={[styles.weightContainer, { marginBottom: 4, paddingBottom: 4 }]}>
-              <ThemedText style={styles.statsLabel}>Weight</ThemedText>
-              <ThemedText style={styles.statsValue}>{item.weight?.toFixed(1) || 'N/A'}</ThemedText>
-            </View>
-
-            {item.category && (
-              <View style={[styles.statSection, { borderTopWidth: 0, marginTop: 4, paddingTop: 4 }]}>
-                <ThemedText style={styles.statsLabel}>Category</ThemedText>
-                <ThemedText style={styles.statsValue}>{item.category}</ThemedText>
-              </View>
-            )}
-
-            {item.attack && item.attack.length > 0 && (
-              <View style={[styles.statSection, { marginTop: 12, paddingTop: 12, borderTopWidth: 1 }]}>
-                <ThemedText style={styles.statsLabel}>Attack</ThemedText>
-                <View style={styles.statsGrid}>
-                  {item.attack.map((stat) => (
-                    <View key={stat.name} style={styles.statItem}>
-                      <ThemedText style={styles.statType}>{stat.name}</ThemedText>
-                      <ThemedText style={styles.statValue}>
-                        {stat.amount !== null ? stat.amount : 'N/A'}
-                      </ThemedText>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {item.defence && item.defence.length > 0 && (
-              <View style={[styles.statSection, { marginTop: 12, paddingTop: 12, borderTopWidth: 1 }]}>
-                <ThemedText style={styles.statsLabel}>Defence</ThemedText>
-                <View style={styles.statsGrid}>
-                  {item.defence.map((stat) => (
-                    <View key={stat.name} style={styles.statItem}>
-                      <ThemedText style={styles.statType}>{stat.name}</ThemedText>
-                      <ThemedText style={styles.statValue}>
-                        {stat.amount !== null ? stat.amount : 'N/A'}
-                      </ThemedText>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {item.scalesWith && item.scalesWith.length > 0 && (
-              <View style={[styles.statSection, { marginTop: 12, paddingTop: 12, borderTopWidth: 1 }]}>
-                <ThemedText style={styles.statsLabel}>Scaling</ThemedText>
-                <View style={styles.statsGrid}>
-                  {item.scalesWith.map((stat) => (
-                    <View key={stat.name} style={styles.statItem}>
-                      <ThemedText style={styles.statType}>{stat.name}</ThemedText>
-                      <ThemedText style={styles.statValue}>
-                        {stat.scaling || 'N/A'}
-                      </ThemedText>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {showRequirements && (item as any).requiredAttributes && (
-              <View style={[styles.statSection, { marginTop: 12, paddingTop: 12, borderTopWidth: 1 }]}>
-                <ThemedText style={styles.statsLabel}>Requirements</ThemedText>
-                <View style={styles.statsGrid}>
-                  {(item as any).requiredAttributes.map((req: { name: string; amount: number | null }) => (
-                    <View key={req.name} style={styles.statItem}>
-                      <ThemedText style={styles.statType}>{req.name}</ThemedText>
-                      <ThemedText style={[
-                        styles.statValue,
-                        !canEquipWeapon([req]) && styles.statValueUnmet
-                      ]}>
-                        {req.amount !== null ? req.amount : 'N/A'}
-                      </ThemedText>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
-          </View>
-        )}
-
-        {isExpanded && type === 'shields' && (
-          <View style={[styles.statsContainer, { padding: 8 }]}>
-            <View style={[styles.weightContainer, { marginBottom: 4, paddingBottom: 4 }]}>
-              <ThemedText style={styles.statsLabel}>Weight</ThemedText>
-              <ThemedText style={styles.statsValue}>{item.weight?.toFixed(1) || 'N/A'}</ThemedText>
-            </View>
-
-            {item.attack && item.attack.length > 0 && (
-              <View style={[styles.statSection, { borderTopWidth: 0, marginTop: 4, paddingTop: 4 }]}>
-                <ThemedText style={styles.statsLabel}>Attack</ThemedText>
-                <View style={styles.statsGrid}>
-                  {item.attack.map((stat) => (
-                    <View key={stat.name} style={styles.statItem}>
-                      <ThemedText style={styles.statType}>{stat.name}</ThemedText>
-                      <ThemedText style={styles.statValue}>
-                        {stat.amount !== null ? stat.amount : 'N/A'}
-                      </ThemedText>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {item.defence && item.defence.length > 0 && (
-              <View style={[styles.statSection, { borderTopWidth: 0, marginTop: 4, paddingTop: 4 }]}>
-                <ThemedText style={styles.statsLabel}>Defence</ThemedText>
-                <View style={styles.statsGrid}>
-                  {item.defence.map((stat) => (
-                    <View key={stat.name} style={styles.statItem}>
-                      <ThemedText style={styles.statType}>{stat.name}</ThemedText>
-                      <ThemedText style={styles.statValue}>
-                        {stat.amount !== null ? stat.amount : 'N/A'}
-                      </ThemedText>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {item.scalesWith && item.scalesWith.length > 0 && (
-              <View style={[styles.statSection, { borderTopWidth: 0, marginTop: 4, paddingTop: 4 }]}>
-                <ThemedText style={styles.statsLabel}>Scaling</ThemedText>
-                <View style={styles.statsGrid}>
-                  {item.scalesWith.map((stat) => (
-                    <View key={stat.name} style={styles.statItem}>
-                      <ThemedText style={styles.statType}>{stat.name}</ThemedText>
-                      <ThemedText style={styles.statValue}>
-                        {stat.scaling || 'N/A'}
-                      </ThemedText>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
-          </View>
-        )}
-
-        {isExpanded && type === 'armors' && (
-          <View style={styles.statsContainer}>
-            <View style={styles.weightContainer}>
-              <ThemedText style={styles.statsLabel}>Weight</ThemedText>
-              <ThemedText style={styles.statsValue}>{item.weight?.toFixed(1) || 'N/A'}</ThemedText>
-            </View>
-            
-            {item.dmgNegation && item.dmgNegation.length > 0 && (
-              <View style={styles.dmgNegationContainer}>
-                <ThemedText style={styles.statsLabel}>Damage Negation</ThemedText>
-                <View style={styles.statsGrid}>
-                  {item.dmgNegation.map((stat) => (
-                    <View key={stat.name} style={styles.statItem}>
-                      <ThemedText style={styles.statType}>{stat.name}</ThemedText>
-                      <ThemedText style={styles.statValue}>
-                        {stat.amount !== null ? stat.amount.toFixed(1) : 'N/A'}
-                      </ThemedText>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {item.resistance && item.resistance.length > 0 && (
-              <View style={styles.statSection}>
-                <ThemedText style={styles.statsLabel}>Resistance</ThemedText>
-                <View style={styles.statsGrid}>
-                  {item.resistance.map((stat) => (
-                    <View key={stat.name} style={styles.statItem}>
-                      <ThemedText style={styles.statType}>{stat.name}</ThemedText>
-                      <ThemedText style={styles.statValue}>
-                        {stat.amount !== null ? stat.amount.toFixed(1) : 'N/A'}
-                      </ThemedText>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
-          </View>
-        )}
-
-        {isExpanded && type === 'spirits' && (
-          <View style={[styles.statsContainer, { padding: 8 }]}>
-            {(item as any).fpCost && parseInt((item as any).fpCost) > 0 && (
-              <View style={[styles.weightContainer, { marginBottom: 4, paddingBottom: 4 }]}>
-                <ThemedText style={styles.statsLabel}>FP Cost</ThemedText>
-                <ThemedText style={styles.statsValue}>{(item as any).fpCost}</ThemedText>
-              </View>
-            )}
-            {(item as any).hpCost && parseInt((item as any).hpCost) > 0 && (
-              <View style={[styles.weightContainer, { marginBottom: 4, paddingBottom: 4 }]}>
-                <ThemedText style={styles.statsLabel}>HP Cost</ThemedText>
-                <ThemedText style={styles.statsValue}>{(item as any).hpCost}</ThemedText>
-              </View>
-            )}
-            {(item as any).effect && (
-              <View style={[styles.weightContainer, { borderBottomWidth: 0, marginBottom: 0, paddingBottom: 0 }]}>
-                <ThemedText style={styles.statsLabel}>Effect</ThemedText>
-                <ThemedText style={styles.statsValue}>{(item as any).effect}</ThemedText>
-              </View>
-            )}
-          </View>
-        )}
-
-        {isExpanded && type === 'ashes' && (
-          <View style={[styles.statsContainer, { padding: 8 }]}>
-            <View style={[styles.weightContainer, { marginBottom: 4, paddingBottom: 4 }]}>
-              <ThemedText style={styles.statsLabel}>Affinity</ThemedText>
-              <ThemedText style={styles.statsValue}>{(item as any).affinity || 'N/A'}</ThemedText>
-            </View>
-            {(item as any).skill && (
-              <View style={[styles.weightContainer, { borderBottomWidth: 0, marginBottom: 4, paddingBottom: 4 }]}>
-                <ThemedText style={styles.statsLabel}>Skill</ThemedText>
-                <ThemedText style={styles.statsValue}>{(item as any).skill}</ThemedText>
-              </View>
-            )}
-            {(item as any).fpCost && parseInt((item as any).fpCost) > 0 && (
-              <View style={[styles.weightContainer, { marginBottom: 4, paddingBottom: 4 }]}>
-                <ThemedText style={styles.statsLabel}>FP Cost</ThemedText>
-                <ThemedText style={styles.statsValue}>{(item as any).fpCost}</ThemedText>
-              </View>
-            )}
-            {(item as any).hpCost && parseInt((item as any).hpCost) > 0 && (
-              <View style={[styles.weightContainer, { marginBottom: 4, paddingBottom: 4 }]}>
-                <ThemedText style={styles.statsLabel}>HP Cost</ThemedText>
-                <ThemedText style={styles.statsValue}>{(item as any).hpCost}</ThemedText>
-              </View>
-            )}
-            {(item as any).effect && (
-              <View style={[styles.weightContainer, { borderBottomWidth: 0, marginBottom: 0, paddingBottom: 0 }]}>
-                <ThemedText style={styles.statsLabel}>Effect</ThemedText>
-                <ThemedText style={styles.statsValue}>{(item as any).effect}</ThemedText>
-              </View>
-            )}
-          </View>
-        )}
-
-        {isExpanded && isSpell && spellItem && (
-          <View style={[styles.statsContainer, { padding: 8 }]}>
-            <View style={[styles.weightContainer, { marginBottom: 4, paddingBottom: 4 }]}>
-              <ThemedText style={styles.statsLabel}>FP Cost</ThemedText>
-              <ThemedText style={styles.statsValue}>{spellItem.cost || 'N/A'}</ThemedText>
-            </View>
-
-            {spellItem.slots && (
-              <View style={[styles.weightContainer, { marginBottom: 4, paddingBottom: 4 }]}>
-                <ThemedText style={styles.statsLabel}>Memory Slots</ThemedText>
-                <ThemedText style={styles.statsValue}>{spellItem.slots}</ThemedText>
-              </View>
-            )}
-
-            {showRequirements && spellItem.requires && spellItem.requires.length > 0 && (
-              <View style={[styles.statSection, { borderTopWidth: 0, marginTop: 4, paddingTop: 4 }]}>
-                <ThemedText style={styles.statsLabel}>Requirements</ThemedText>
-                <View style={styles.statsGrid}>
-                  {spellItem.requires.map((req) => (
-                    <View key={req.name} style={styles.statItem}>
-                      <ThemedText style={styles.statType}>{req.name}</ThemedText>
-                      <ThemedText style={[
-                        styles.statValue,
-                        !canEquipWeapon([req]) && styles.statValueUnmet
-                      ]}>
-                        {req.amount !== null ? req.amount : 'N/A'}
-                      </ThemedText>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
-          </View>
-        )}
-      </TouchableOpacity>
-    );
+    setShowEquippableOnly(prev => !prev);
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
   };
 
   const filteredItems = filterItems(searchQuery, showEquippableOnly);
@@ -498,8 +566,20 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
       </View>
 
       <FlatList
+        ref={flatListRef}
         data={filteredItems}
-        renderItem={renderItem}
+        renderItem={({ item }) => (
+          <EquipmentListItem
+            item={item}
+            type={type}
+            showRequirements={showRequirements}
+            expandedItems={expandedItems}
+            toggleExpanded={toggleExpanded}
+            canEquipWeapon={canEquipWeapon}
+            isFavorite={isFavorite}
+            toggleFavorite={toggleFavorite}
+          />
+        )}
         keyExtractor={(item) => item.id}
         style={styles.list}
         contentContainerStyle={styles.listContent}
@@ -511,6 +591,9 @@ export function EquipmentList({ title, type, showRequirements = false }: Equipme
             </ThemedText>
           </View>
         }
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={5}
       />
     </ThemedView>
   );
