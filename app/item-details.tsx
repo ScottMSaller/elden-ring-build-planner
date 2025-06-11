@@ -2,6 +2,7 @@ import SafeAreaWrapper from '@/components/SafeAreaWrapper';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
+import { useCharacter } from '@/contexts/CharacterContext';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import armorData from '@/data/armors.json';
 import ashesData from '@/data/ashes.json';
@@ -15,7 +16,7 @@ import weaponsData from '@/data/weapons.json';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import React from 'react';
-import { Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const DATA_MAP = {
   weapons: weaponsData,
@@ -45,15 +46,20 @@ function hasDmgNegation(item: any): item is { dmgNegation: { name: string; amoun
 function hasResistance(item: any): item is { resistance: { name: string; amount: number | null }[] } {
   return Array.isArray(item.resistance);
 }
+function hasRequirements(item: any): item is { requiredAttributes?: { name: string; amount: number | null }[]; requires?: { name: string; amount: number | null }[] } {
+  return (Array.isArray(item.requiredAttributes) || Array.isArray(item.requires));
+}
 
 export default function ItemDetailsScreen() {
   const { id, type } = useLocalSearchParams();
   const colorScheme = useColorScheme();
   const colors = Colors[(colorScheme ?? 'light') as 'light' | 'dark'];
   const { toggleFavorite, isFavorite } = useFavorites();
+  const { canEquipWeapon } = useCharacter();
 
   const item = DATA_MAP[type as keyof typeof DATA_MAP].find(i => i.id === id);
   const itemIsFavorite = isFavorite(id as string);
+  const canEquip = hasRequirements(item) ? canEquipWeapon(item.requiredAttributes || item.requires) : true;
 
   if (!item) {
     return (
@@ -92,7 +98,10 @@ export default function ItemDetailsScreen() {
         }}
       />
       <ThemedView style={styles.container}>
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView 
+          style={styles.content} 
+          contentContainerStyle={styles.contentContainer}
+          showsVerticalScrollIndicator={false}>
           <View style={styles.imageContainer}>
             <Image
               source={(item as any).image ? { uri: (item as any).image } : require('@/assets/images/partial-react-logo.png')}
@@ -106,6 +115,12 @@ export default function ItemDetailsScreen() {
           
           {(item as any).type && (
             <ThemedText style={styles.type}>{(item as any).type}</ThemedText>
+          )}
+
+          {!canEquip && (
+            <View style={styles.requirementBadge}>
+              <Text style={styles.requirementText}>Cannot Equip</Text>
+            </View>
           )}
 
           {(item as any).description && (
@@ -125,6 +140,27 @@ export default function ItemDetailsScreen() {
             <View style={styles.section}>
               <ThemedText style={styles.sectionTitle}>Weight</ThemedText>
               <ThemedText style={styles.sectionText}>{(item as any).weight.toFixed(1)}</ThemedText>
+            </View>
+          )}
+
+          {hasRequirements(item) && (item.requiredAttributes?.length || item.requires?.length) && (
+            <View style={styles.section}>
+              <ThemedText style={styles.sectionTitle}>Requirements</ThemedText>
+              <View style={styles.statsGrid}>
+                {(item.requiredAttributes || item.requires || [])
+                  .filter(req => req.name && req.name !== '-' && req.amount && req.amount > 0)
+                  .map(req => (
+                    <View key={req.name} style={styles.statItem}>
+                      <ThemedText style={styles.statType}>{req.name}</ThemedText>
+                      <ThemedText style={[
+                        styles.statValue,
+                        !canEquipWeapon([req]) && styles.statValueUnmet
+                      ]}>
+                        {req.amount !== null ? Math.floor(req.amount) : 'N/A'}
+                      </ThemedText>
+                    </View>
+                  ))}
+              </View>
             </View>
           )}
 
@@ -258,6 +294,9 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
+  contentContainer: {
+    paddingBottom: 40,
+  },
   imageContainer: {
     width: '100%',
     aspectRatio: 1,
@@ -314,6 +353,22 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 14,
+    fontWeight: 'bold',
+  },
+  statValueUnmet: {
+    color: 'red',
+  },
+  requirementBadge: {
+    backgroundColor: '#ff4444',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+    marginBottom: 16,
+  },
+  requirementText: {
+    color: 'white',
+    fontSize: 12,
     fontWeight: 'bold',
   },
 }); 
