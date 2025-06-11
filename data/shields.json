@@ -2929,13 +2929,13 @@
     "scalesWith": [
       {
         "name": "Strength",
-        "scaling": "-"
+        "scaling": "D"
       }
     ],
     "requiredAttributes": [
       {
         "name": "Strength",
-        "amount": null
+        "amount": 10
       }
     ],
     "category": "Medium Shield",
@@ -4614,8 +4614,8 @@
     ],
     "requiredAttributes": [
       {
-        "name": "32",
-        "amount": null
+        "name": "Str",
+        "amount": 32
       }
     ],
     "category": "Greatshield",

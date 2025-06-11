@@ -99,6 +99,7 @@ export function CharacterProvider({ children }: CharacterProviderProps) {
         case 'intelligence':
           return stats.intelligence >= required;
         case 'fth':
+        case 'fai':
         case 'faith':
           return stats.faith >= required;
         case 'arc':
@@ -112,8 +113,15 @@ export function CharacterProvider({ children }: CharacterProviderProps) {
     // Handle different requirement formats that might come from the API
     if (Array.isArray(requirements)) {
       return requirements.every((req: any) => {
-        if (typeof req === 'object' && req.name && req.amount) {
-          return checkRequirement(req.name, parseInt(req.amount) || 0);
+        if (
+          typeof req === 'object' &&
+          req.name &&
+          req.name !== '-' &&
+          req.amount !== undefined &&
+          req.amount !== null &&
+          Number(req.amount) > 0
+        ) {
+          return checkRequirement(req.name, parseInt(req.amount));
         }
         return true;
       });
